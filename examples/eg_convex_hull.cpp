@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cassert>
-#include "lines.h"
+#include "line.h"
 #include "convexhull.h"
 #include <math.h> 
 #include <algorithm>
