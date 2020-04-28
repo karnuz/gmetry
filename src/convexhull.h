@@ -6,41 +6,40 @@
 #include <iostream>
 #include <algorithm>
 #include <assert.h>
-#include "point.h"
+#include "point2d.h"
 #include "convexhull.h"
 #include "utils.h"
 #include <stdlib.h> // qsort
 
 using namespace std;
 
-#include "point.h"
 
-int findMinYXIndex(vector<Point> p_vec);
-int findMinYXIndex(Point points[], int n);
+int findMinYXIndex(vector<Point2D> p_vec);
+int findMinYXIndex(Point2D points[], int n);
 int compare(const void *vp1, const void *vp2);
   
 // compare as per polar angle with reespect to private field p0. If p1 < p2 then it returns -1 else 1
 
-Point p0;
+Point2D p0;
 
 
 class ConvexHull {
  private:
-  vector<Point> p_vec;
-  Point p;
+  vector<Point2D> p_vec;
+  Point2D p;
   
  public:
-  vector<Point> grahamScan(Point points[], int n);
+  vector<Point2D> grahamScan(Point2D points[], int n);
 
-  void sortPolar(Point p_vec[], int n);
-  void sortPolar(vector<Point> &p_vec);
+  void sortPolar(Point2D p_vec[], int n);
+  void sortPolar(vector<Point2D> &p_vec);
   
 private:
-  int polarCompare(const Point &p1, const Point &p2);
+  int polarCompare(const Point2D &p1, const Point2D &p2);
 };
 
 
-int ppolarCompare(const Point &p1, const Point &p2) {
+int ppolarCompare(const Point2D &p1, const Point2D &p2) {
   int o = get_orientation(p0, p1, p2);
   if(o == 0) {
     double d1 = distSq(p0, p1);
@@ -51,7 +50,7 @@ int ppolarCompare(const Point &p1, const Point &p2) {
 }
 
 
-int ConvexHull::polarCompare(const Point &p1, const Point &p2) {
+int ConvexHull::polarCompare(const Point2D &p1, const Point2D &p2) {
   int o = get_orientation(this->p, p1, p2);
   if(o == 0) {
     double d1 = distSq(this->p, p1);
@@ -63,9 +62,9 @@ int ConvexHull::polarCompare(const Point &p1, const Point &p2) {
 
 
 // sorts point in place
-void ConvexHull::sortPolar(vector<Point> &p_vec) {
+void ConvexHull::sortPolar(vector<Point2D> &p_vec) {
   int min = findMinYXIndex(p_vec);
-  Point temp = p_vec[min];
+  Point2D temp = p_vec[min];
   p_vec[min] = p_vec[0];
   p_vec[0] = temp;
 
@@ -80,25 +79,25 @@ void ConvexHull::sortPolar(vector<Point> &p_vec) {
   //2.
   // using class polar compare function
   this->p = p_vec[0];
-  sort(p_vec.begin()+1, p_vec.end() , [this](Point x, Point y) { return this->polarCompare(x,y);});
+  sort(p_vec.begin()+1, p_vec.end() , [this](Point2D x, Point2D y) { return this->polarCompare(x,y);});
 }
 
 // sorts point in place
-void ConvexHull::sortPolar(Point points[], int n) {
+void ConvexHull::sortPolar(Point2D points[], int n) {
   
   int min = findMinYXIndex(points, n);   
-  Point temp = points[min];
+  Point2D temp = points[min];
   points[min] = points[0];
   points[0] = temp;
   p0 = points[0];
-  qsort(&points[1], n-1, sizeof(Point) , compare);
+  qsort(&points[1], n-1, sizeof(Point2D) , compare);
 }
 
 
-vector<Point> ConvexHull::grahamScan(Point points[], int n) {
+vector<Point2D> ConvexHull::grahamScan(Point2D points[], int n) {
   assert(n >= 3);
 
-  vector<Point> convexHullBoundary;
+  vector<Point2D> convexHullBoundary;
   this->sortPolar(points,n);
 
 
@@ -122,11 +121,11 @@ vector<Point> ConvexHull::grahamScan(Point points[], int n) {
       continue;
     }
     while(true) {
-      vector<Point>::iterator it = convexHullBoundary.end();
+      vector<Point2D>::iterator it = convexHullBoundary.end();
       --it;
-      Point last = *it;
+      Point2D last = *it;
       --it;
-      Point secondlast = *it;
+      Point2D secondlast = *it;
       int o = get_orientation(secondlast, last, points[i]);
       if(o < 0) {
 	convexHullBoundary.pop_back();
@@ -146,8 +145,8 @@ vector<Point> ConvexHull::grahamScan(Point points[], int n) {
 int compare(const void *vp1, const void *vp2) 
 {
   //   assert(p0 != NULL);
-   Point *p1 = (Point *)vp1; 
-   Point *p2 = (Point *)vp2; 
+   Point2D *p1 = (Point2D *)vp1; 
+   Point2D *p2 = (Point2D *)vp2; 
   
    // Find orientation 
    int o = get_orientation(p0, *p1, *p2); 
@@ -159,7 +158,7 @@ int compare(const void *vp1, const void *vp2)
 
 
 // Find the bottommost point 
-int findMinYXIndex(Point points[], int n) {
+int findMinYXIndex(Point2D points[], int n) {
   
   int r = 0;
   int i;
@@ -183,7 +182,7 @@ int findMinYXIndex(Point points[], int n) {
 
 
 // returns the index of point which is least in Y. If more than two points are least in Y, returns the one least in X.
-int findMinYXIndex(vector<Point> p_vec) {
+int findMinYXIndex(vector<Point2D> p_vec) {
   assert(p_vec.size() > 0);
   int r = 0;
   int i;

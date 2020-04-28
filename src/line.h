@@ -1,18 +1,18 @@
 #ifndef _LINES_H_
 #define _LINES_H_
 
-#include "point.h"
+#include "point2d.h"
 #include <iostream>
 #include "utils.h"
 #include <cstdlib>
 #include <limits>
 
 struct Line {
-  Point p1;
-  Point p2;
+  Point2D p1;
+  Point2D p2;
 };
 
-bool isPointOnSegment(Point p1, Point p2, Point q);
+bool isPointOnSegment(Point2D p1, Point2D p2, Point2D q);
 bool doesIntersect (Line l1, Line l2);
 
 
@@ -35,7 +35,7 @@ float getSlope(Line l) {
 }
 
 
-bool isPointOnSegment(Point p1, Point p2, Point q) {
+bool isPointOnSegment(Point2D p1, Point2D p2, Point2D q) {
   float minx, maxx, miny, maxy;
   minx = min(p1.x, p2.x);
   maxx = max(p1.x, p2.x);
@@ -51,7 +51,7 @@ bool isPointOnSegment(Point p1, Point p2, Point q) {
 
 
 bool doesIntersect(Line l1, Line l2) {
-  Point p1, p2, q1, q2;
+  Point2D p1, p2, q1, q2;
   p1 = l1.p1;
   p2 = l1.p2;
   q1 = l2.p1;

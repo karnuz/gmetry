@@ -1,14 +1,14 @@
 #ifndef _POINTSET_H_
 #define _POINTSET_H_
 
-#include "points.h"
+#include "point2D.h"
 
 class Pointset {
-  vector<Point> s;
+  vector<Point2D> s;
 
  public:
 
-  Pointset(vector<Point> v) {
+  Pointset(vector<Point2D> v) {
     s = v;
   }
 
@@ -18,7 +18,7 @@ class Pointset {
   }
 
   // return 0 if all goes well, else return something ese #TODO
-  int add_point(Point p) {
+  int add_point(Point2D p) {
     s.push_back(p)
   }
 
