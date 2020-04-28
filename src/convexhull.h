@@ -137,8 +137,7 @@ vector<Point> ConvexHull::grahamScan(Point points[], int n) {
       }
     }
   }
-  return convexHullBoundary;
-  
+  return convexHullBoundary;  
 }
 
 

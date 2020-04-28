@@ -52,7 +52,6 @@ void test_sortPolar() {
   }
   cout << "\n\n\n";
 
-  
 
   vector<Point> p_vec{p3,p2,p4,p5,p1};
   c.sortPolar(p_vec);
@@ -67,6 +66,8 @@ void test_sortPolar() {
 
   //  assert(p_vec_exp == p_vec);
 }
+
+
 
 
 

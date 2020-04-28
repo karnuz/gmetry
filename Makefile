@@ -24,7 +24,8 @@ CFLAGS=-Isrc/ -framework GLUT -framework OpenGL
 #EXAMPLES_CFLAGS=-Isrc/ -framework GLUT -framework OpenGL
 
 TEST_LDFLAGS=-Wl,
-EXAMPLES_LDFLAGS=-Wl, -framework GLUT -framework OpenGL
+EXAMPLES_LDFLAGS=-Wl, -framework GLUT -framework OpenGL -lGLEW -lglfw
+
 # define a newline function to run each test as a separate command
 define \n
 

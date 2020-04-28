@@ -65,7 +65,35 @@ void test_sortPolar() {
   
   vector<Point> p_vec_exp = {p1,p2,p3,p4,p5};
 
-  assert(p_vec_exp == p_vec);
+  //  assert(p_vec_exp == p_vec);
+}
+
+
+
+void test_grahamScan() {
+  //  Point p1 = {2,1}, p2 = {3,1}, p3 = {4,2}, p4 = {4,3}, p5 = {2,3};
+
+  Point p0;
+
+  cout << p0.x << "," << p0.y << "\n";
+  
+  Point p1 = {1,1}, p2 = {2,2}, p3 = {3,4}, p4 = {4,8}, p5 = {5,16}, p6 = {6,8}, p7 = {5,4.4}, p8 = {3,2}, p9 = {4,4}, p10 = {3,2}, p11 = {-1,5};
+  
+  ConvexHull c;
+
+  Point points[] = {p3,p10,p2,p4,p7,p5,p9,p11,p1,p6,p8};
+
+
+  vector<Point> hull;
+  hull = c.grahamScan(points, 10);
+
+  cout << "hull\n";
+  vector<Point>::iterator it = hull.begin();
+  while(it != hull.end())
+  {
+    cout << (*it).x << " " << (*it).y << "\n";
+    it++;
+  }
 }
 
 
@@ -74,4 +102,5 @@ int main(int argc, char** argv) {
 
   test_doesIntersect();
   test_sortPolar();
+  test_grahamScan();
 }
