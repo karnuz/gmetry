@@ -82,6 +82,8 @@ private:
     }
     else if(mthd=="GL_POINTS") {
       method = GL_POINTS;
+      glEnable(GL_PROGRAM_POINT_SIZE);
+      
     }
     else if(mthd=="GL_LINE_LOOP") {
       method = GL_LINE_LOOP;
@@ -138,6 +140,7 @@ public:
       //"uniform mat4 u_view;"
       "void main() {"
       "  gl_Position = u_proj * vec4(vp, 1.0);"
+      "  gl_PointSize = 10.0;"
       "}";
     
     const char* fragment_shader =

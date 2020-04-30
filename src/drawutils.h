@@ -41,21 +41,22 @@ public:
       points[3*i + 1] = pts[i].y;
       points[3*i + 2] = 0.0f;
     }
-    
-    
-    
 
-    /*    
-    float points[] = {
-		      0.0f,  0.5f,  0.0f,
-		      0.5f, -0.5f,  0.0f,
-		      -0.5f, -0.5f,  0.0f,
-		      0.2f, -0.8f, 0.0f,
-		      0.9f, 0.5f, 0.0f
-    };
-    size = 5;
-    */
+    cout<< size << "\n";
+    int slide = 3;
+    Mesh mesh(points, size, 3, primitive);
+    scene->addMesh(mesh);
+  }
+
+  void addPoints2D(Point2D pts[], int size, string primitive ) {
+
     
+    float points[3*size];
+    for (int i = 0; i < size; i++) {
+      points[3*i] = pts[i].x;
+      points[3*i + 1] = pts[i].y;
+      points[3*i + 2] = 0.0f;
+    }
 
     cout<< size << "\n";
     int slide = 3;

@@ -23,9 +23,9 @@ void test_AVLTree() {
 
     AVLTree<int> t;
     generate(vecOfRandomNums.begin(), vecOfRandomNums.end(), []()
-    								  {
-    								    return rand() % 500;
-    								  });
+							     {
+							       return rand() % 500;
+							     });
     
     unordered_set<int> numset(vecOfRandomNums.begin(), vecOfRandomNums.end());
     vector<int> veccopy(numset.begin(), numset.end());
