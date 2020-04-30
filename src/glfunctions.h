@@ -3,7 +3,7 @@
 #include <math.h> 
 #include <algorithm>
 #include <vector>
-#define pi 3.142857
+//#define pi 3.142857
 
 #include <GL/glew.h>
 
@@ -19,12 +19,23 @@
 #endif
 
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 
 using namespace std;
 
 class View;
 class Scene;
 class Mesh;
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+    glOrtho(-10,10,-10,10,-10,10);
+}
+
 
 class Mesh {
 
@@ -48,7 +59,7 @@ public:
     glBindVertexArray(vao);
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glVertexAttribPointer(0, sz, GL_FLOAT, GL_FALSE, 0, NULL);
+    glVertexAttribPointer(0, sld, GL_FLOAT, GL_FALSE, 0, NULL);
 
     size = sz;
     slide = sld;
@@ -59,7 +70,7 @@ public:
 
   void draw() {
     glBindVertexArray(vao);
-    glDrawArrays(method, 0, size);    
+    glDrawArrays(method, 0, size);
   }
 
 
@@ -123,15 +134,17 @@ public:
     const char* vertex_shader =
       "#version 400\n"
       "in vec3 vp;"
+      "uniform mat4 u_proj;"
+      //"uniform mat4 u_view;"
       "void main() {"
-      "  gl_Position = vec4(vp, 1.0);"
+      "  gl_Position = u_proj * vec4(vp, 1.0);"
       "}";
     
     const char* fragment_shader =
       "#version 400\n"
       "out vec4 frag_colour;"
       "void main() {"
-      "  frag_colour = vec4(0.5, 0.0, 0.5, 1.0);"
+      "  frag_colour = vec4(0.9, 0.0, 0.0, 1.0);"
       "}";
     
 
@@ -148,8 +161,7 @@ public:
     glAttachShader(shader_programme, vs);
     glLinkProgram(shader_programme);
 
-    glOrtho(-25,25,-20,25,-100,100);
-    glViewport(0,0,50,50);
+
   }
 
 
@@ -164,6 +176,16 @@ public:
     glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
     glUseProgram(shader_programme);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glm::mat4 proj = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, -10.0f, 10.0f);
+    //    glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    GLint projLoc = glGetUniformLocation(shader_programme, "u_proj");
+    //GLint viewLoc = glGetUniformLocation(shader_programme, "u_view");
+
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+    //glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+    
 
     vector<Mesh>::iterator it = meshes.begin();
     
@@ -216,7 +238,7 @@ public:
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    
+    //glfwWindowHint(GLFW_OPENGL_ANY_PROFILE,GLFW_OPENGL_ANY_PROFILE);
     window = glfwCreateWindow(640, 480, "Hello Triangle", NULL, NULL);
     if (!window) {
       fprintf(stderr, "ERROR: could not open window with GLFW3\n");
@@ -224,7 +246,7 @@ public:
       return;
     }
     glfwMakeContextCurrent(window);
-
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   }
 
 
@@ -233,6 +255,14 @@ public:
   }
 
   void draw() {
+
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+    glViewport(0, 0, width, height);
+
+    cout << width << "\n";
+    cout << height << "\n";
+    glOrtho(-10,10,-10,10,-10,10);
 
     while(!glfwWindowShouldClose(window)){
       view->draw();
@@ -246,47 +276,4 @@ public:
   }  
   
 };
-
-
-
-int main() {
-
-
-  OpenGLWindow w;
-  // start GLEW extension handler
-  glewExperimental = GL_TRUE;
-  //glewInit();
-
-
-  if(GLEW_OK != glewInit()) {
-    cout<< "glew not initialized";
-    return -1;
-  }
-  
-  float points[] = {
-		    0.0f,  0.5f,  0.0f,
-		    0.5f, -0.5f,  0.0f,
-		    -0.5f, -0.5f,  0.0f
-  };
-
-  Mesh mesh(points, 3, 3, "GL_LINE_LOOP");
-
-
-  
-  
-  //  vector<Mesh> meshes;
-  //meshes.push_back(mesh);
-  
-  Scene scene;
-  scene.addMesh(mesh);
-
-  View v(&scene);
-
-  w.setView(&v);
-
-  w.draw();
-  
-  return 0;
-}
-
 

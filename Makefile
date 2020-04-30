@@ -20,8 +20,8 @@ EXAMPLES_SRC=$(wildcard $(EXAMPLEDIR)/*.cpp)
 EXAMPLES_OBJS=$(patsubst $(EXAMPLEDIR)/%.cpp, $(EXAMPLEOBJDIR)/%.o, $(EXAMPLES_SRC))
 EXAMPLES_BINS=$(patsubst %.o, %, $(EXAMPLES_OBJS))
 
-CFLAGS=-Isrc/ -framework GLUT -framework OpenGL
-#EXAMPLES_CFLAGS=-Isrc/ -framework GLUT -framework OpenGL
+CFLAGS=-Isrc/ -I./ -framework GLUT -framework OpenGL
+#EXAMPLES_CFLAGS=-Isrc/ -Iglm/ -framework GLUT -framework OpenGL
 
 TEST_LDFLAGS=-Wl,
 EXAMPLES_LDFLAGS=-Wl, -framework GLUT -framework OpenGL -lGLEW -lglfw
@@ -65,7 +65,7 @@ $(EXAMPLEOBJDIR)/%: $(EXAMPLEOBJDIR)/%.o
 	$(CXX) -g -o $@ $< $(EXAMPLES_LDFLAGS)
 
 $(EXAMPLEOBJDIR)/%.o: $(EXAMPLEDIR)/%.cpp
-	$(CXX) -D_DEBUG -g -O0 -I$(SRCDIR) -c -o $@ $<
+	$(CXX) -D_DEBUG -g -O0 -I$(SRCDIR) -I./ -c -o $@ $<
 
 clean:
 	rm -rf $(OBJDIR)
