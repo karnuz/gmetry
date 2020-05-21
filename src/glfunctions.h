@@ -36,6 +36,39 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glOrtho(-10,10,-10,10,-10,10);
 }
 
+/*
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) 
+    {
+       double xpos, ypos;
+       //getting cursor position
+       glfwGetCursorPos(window, &xpos, &ypos);
+       cout << "Cursor Position at (" << xpos << " : " << ypos << endl;
+    }
+}
+*/
+
+// a callable pointer here.
+
+template <typename F, typename C>
+class MyGLWindow {
+  C *obj;
+  F fun;
+
+public:
+  MyGLWindow(F fun, C *obj) {
+    this->obj = obj;
+    this->fun = fun;
+  }
+
+  void mouseButtonPressed(double x, double y) {
+    //    ((*(this->obj)).(*(this->fun)))(x,y);
+    (obj->*fun)(x,y);
+  }
+  
+};
+
 
 class Mesh {
 
@@ -250,6 +283,7 @@ public:
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    //  glfwSetMouseButtonCallback(window, mouse_button_callback);	
   }
 
 
@@ -276,7 +310,57 @@ public:
 
     }
     glfwTerminate();   
-  }  
+  }
+
+
+
+  
+  template <typename F, typename C>
+  void setClickPositionCallback(F func, C *obj) {
+
+    //(func)(8.0,5.0);   // wont work
+    //((*obj).*func)(6.0,4.0);
+
+    MyGLWindow<F,C> *gw = new MyGLWindow(func, obj);
+    
+    glfwSetWindowUserPointer(window, gw);
+    
+    auto mouse_button_callback = [](GLFWwindow* w, int button, int action, int mods)
+    {
+      if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	{
+	  double xpos, ypos;
+	  //getting cursor position                     
+	  glfwGetCursorPos(w, &xpos, &ypos);
+      	  static_cast<MyGLWindow<F,C>*>(glfwGetWindowUserPointer(w))->mouseButtonPressed(xpos, ypos);
+	  // func(xpos,ypos);
+	  //cout << "Cursor Position is " << xpos << " : " << ypos << endl;
+	}
+    };
+
+    cout << "here\n";
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    
+  }
+  
+
+  
   
 };
 
+
+/*
+
+class MyGLWindow {
+  TestIncremental *obj;
+
+  MyGLWindow(TestIncremental *obj) {
+    this->obj = obj;
+  }
+
+  void mouseButtonPressed(double x, double y) {
+    obj->incrementHull(x,y);
+  }
+
+}
+*/

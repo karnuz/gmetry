@@ -124,9 +124,47 @@ void test_grahamScan2() {
 
 
 
+class TestIncremental {
+private:
+  //  Point2D points[];
+  vector<Point2D> hull;
+
+public:
+
+  void incrementHull(double xpos, double ypos) {
+    cout << "Cccursor Position at " << xpos << " : " << ypos << endl;
+  }
+
+
+  void test_Incremental() {
+    using namespace std::placeholders;
+    //  Point2D p1 = {2,1}, p2 = {3,1}, p3 = {4,2}, p4 = {4,3}, p5 = {2,3};
+
+    GLScene s;
+
+
+    typedef void (TestIncremental::*Fun) (double x, double y);
+    Fun fp = &TestIncremental::incrementHull;
+    //auto fp = std::bind(&TestIncremental::incrementHull, this, _1, _2);
+    //    s.setClickPositionCallback(fp,this);
+    s.setClickPositionCallback(fp, this);
+
+    
+    
+    s.draw();
+  }
+
+};
+
+
+
+
 int main(int argc, char** argv) {
 
   test_doesIntersect();
   test_sortPolar();
-  test_grahamScan2();
+  //test_grahamScan2();
+
+  TestIncremental t;
+  t.test_Incremental();
 }

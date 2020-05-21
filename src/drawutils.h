@@ -76,4 +76,15 @@ public:
     return;
   }
 
+
+
+  template <typename F, typename C>
+  void setClickPositionCallback(F func, C *obj) {
+
+    w.setClickPositionCallback(func, obj);
+    
+  }
+
+
+
 };

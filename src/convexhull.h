@@ -139,6 +139,98 @@ vector<Point2D> ConvexHull::grahamScan(Point2D points[], int n) {
   return convexHullBoundary;  
 }
 
+/*
+vector<Point2D> ConvexHull::incrementHull(Point2D points[], int n) {
+  assert(n >= 3);
+
+  vector<Point2D> convexHullBoundary;
+  this->sortPolar(points,n);
+
+
+  // enter first three points
+  convexHullBoundary.push_back(points[0]);
+  int i = 1;
+  while(convexHullBoundary.size() < 3) {
+    if(points[i] == points[i-1]) {
+      i += 1;
+      continue;
+    } else {
+      convexHullBoundary.push_back(points[i]);
+      i += 1;
+    }
+  }
+
+
+  // check and enter other points.
+  for(; i < n; i++) {
+    if(points[i] == points[i-1]) {
+      continue;
+    }
+    while(true) {
+      vector<Point2D>::iterator it = convexHullBoundary.end();
+      --it;
+      Point2D last = *it;
+      --it;
+      Point2D secondlast = *it;
+      int o = get_orientation(secondlast, last, points[i]);
+      if(o < 0) {
+	convexHullBoundary.pop_back();
+	continue;
+      } else {
+	convexHullBoundary.push_back(points[i]);
+	break;
+      }
+    }
+  }
+  return convexHullBoundary;  
+}
+
+
+vector<Point2D> ConvexHull::incremental(Point2D points[], int n) {
+  assert(n >= 3);
+
+  vector<Point2D> convexHullBoundary;
+  this->sortPolar(points,n);
+
+
+  // enter first three points
+  convexHullBoundary.push_back(points[0]);
+  int i = 1;
+  while(convexHullBoundary.size() < 3) {
+    if(points[i] == points[i-1]) {
+      i += 1;
+      continue;
+    } else {
+      convexHullBoundary.push_back(points[i]);
+      i += 1;
+    }
+  }
+
+
+  // check and enter other points.
+  for(; i < n; i++) {
+    if(points[i] == points[i-1]) {
+      continue;
+    }
+    while(true) {
+      vector<Point2D>::iterator it = convexHullBoundary.end();
+      --it;
+      Point2D last = *it;
+      --it;
+      Point2D secondlast = *it;
+      int o = get_orientation(secondlast, last, points[i]);
+      if(o < 0) {
+	convexHullBoundary.pop_back();
+	continue;
+      } else {
+	convexHullBoundary.push_back(points[i]);
+	break;
+      }
+    }
+  }
+  return convexHullBoundary;  
+}
+*/
 
 
 // polar comparison function 

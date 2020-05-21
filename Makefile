@@ -51,7 +51,7 @@ $(TEST_OBJDIR)/%: $(TEST_OBJDIR)/%.o
 	$(CXX) -g -o $@ $< $(TEST_LDFLAGS)
 
 $(TEST_OBJDIR)/%.o: $(TESTDIR)/%.cpp $(OBJDIR)
-	$(CXX) -D_DEBUG -g -O0 -I$(SRCDIR) -c -o $@ $<
+	$(CXX) -D_DEBUG -g -O0 -I$(SRCDIR) -I./ -c -o $@ $<
 
 check: tests
 	@echo "Running tests..."
