@@ -32,8 +32,8 @@ class Mesh;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    glViewport(0, 0, width, height);
-    glOrtho(-10,10,-10,10,-10,10);
+    glViewport(-width/2, -height/2, width/2, height/2);
+    glOrtho(-20,20,-20,20,-10,10);
 }
 
 /*
@@ -65,6 +65,7 @@ public:
   void mouseButtonPressed(double x, double y) {
     //    ((*(this->obj)).(*(this->fun)))(x,y);
     (obj->*fun)(x,y);
+    //fun(x,y);
   }
   
 };
@@ -173,7 +174,7 @@ public:
       //"uniform mat4 u_view;"
       "void main() {"
       "  gl_Position = u_proj * vec4(vp, 1.0);"
-      "  gl_PointSize = 10.0;"
+      "  gl_PointSize = 3.0;"
       "}";
     
     const char* fragment_shader =
@@ -275,15 +276,21 @@ public:
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     //glfwWindowHint(GLFW_OPENGL_ANY_PROFILE,GLFW_OPENGL_ANY_PROFILE);
-    window = glfwCreateWindow(640, 480, "Hello Triangle", NULL, NULL);
+    window = glfwCreateWindow(1280, 960, "Hello", NULL, NULL);
     if (!window) {
       fprintf(stderr, "ERROR: could not open window with GLFW3\n");
       glfwTerminate();
       return;
     }
+
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+    glViewport(-width/2, -height/2, width, height);
+    glOrtho(-20, 20, -20, 20,-10,10);
+
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    //  glfwSetMouseButtonCallback(window, mouse_button_callback);	
+    //glfwSetMouseButtonCallback(window, mouse_button_callback);	
   }
 
 
@@ -332,7 +339,9 @@ public:
 	  double xpos, ypos;
 	  //getting cursor position                     
 	  glfwGetCursorPos(w, &xpos, &ypos);
-      	  static_cast<MyGLWindow<F,C>*>(glfwGetWindowUserPointer(w))->mouseButtonPressed(xpos, ypos);
+	  int width, height;
+	  glfwGetFramebufferSize(w, &width, &height);
+      	  static_cast<MyGLWindow<F,C>*>(glfwGetWindowUserPointer(w))->mouseButtonPressed(2*xpos/width, 2*ypos/height);
 	  // func(xpos,ypos);
 	  //cout << "Cursor Position is " << xpos << " : " << ypos << endl;
 	}

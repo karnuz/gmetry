@@ -10,9 +10,11 @@
 
 #include <iostream>
 #include <stack>
+#include "node.h"
 
 using namespace std;
 
+/*
 template <class T>
 class Node
 {
@@ -128,6 +130,8 @@ public:
     }
 };
 
+*/
+
 template<class T>
 class BinaryTree
 {
@@ -145,6 +149,21 @@ public:
         root = NULL;
     }
 
+  bool isEmpty() {
+    if(root == NULL) {
+      return true;
+    }
+    return false;
+  }
+
+  void setRoot(Node<T> *node) {
+    this->root = node;
+  }
+
+  Node<T>* getRoot() {
+    return this->root;
+  }
+  
     void Insert(T data)
     {
         Node<T> *node = new Node<T>(data);

@@ -12,7 +12,7 @@ class GLScene
   
 public:
   GLScene() {
-    
+
     // start GLEW extension handler
     glewExperimental = GL_TRUE;
     //glewInit();
@@ -23,6 +23,8 @@ public:
       return;
     }
 
+    //    w = *(new OpenGLWindow(ortholeft, orthoright, orthodown, orthoup));
+
     scene = new Scene();
   }
   
@@ -31,8 +33,8 @@ public:
   
 
 
-
-  void addPoints2D(vector<Point2D> pts, int size, string primitive ) {
+  template <typename T>
+  void addPoints2D(vector<Point2D<T>> pts, int size, string primitive ) {
 
     
     float points[3*size];
@@ -48,7 +50,8 @@ public:
     scene->addMesh(mesh);
   }
 
-  void addPoints2D(Point2D pts[], int size, string primitive ) {
+  template <typename T>
+  void addPoints2D(Point2D<T> pts[], int size, string primitive ) {
 
     
     float points[3*size];

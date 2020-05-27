@@ -1,5 +1,5 @@
-#ifndef _LINES_H_
-#define _LINES_H_
+#ifndef _LINE2D_H_
+#define _LINE2D_H_
 
 #include "point2d.h"
 #include <iostream>
@@ -7,36 +7,39 @@
 #include <cstdlib>
 #include <limits>
 
-struct Line {
-  Point2D p1;
-  Point2D p2;
+template <typename T>
+struct Line2D {
+  Point2D<T> p1;
+  Point2D<T> p2;
 };
 
-bool isPointOnSegment(Point2D p1, Point2D p2, Point2D q);
-bool doesIntersect (Line l1, Line l2);
+template <typename T>
+bool isPointOnSegment(Point2D<T> p1, Point2D<T> p2, Point2D<T> q);
+template <typename T>
+bool doesIntersect (Line2D<T> l1, Line2D<T> l2);
 
 
 using namespace std;
 
-
-float getSlope(Line l) {
-  float x1, y1, x2, y2;
+template <typename T>
+float getSlope(Line2D<T> l) {
+  T x1, y1, x2, y2;
   x1 = l.p1.x;
   x2 = l.p2.x;
   y1 = l.p1.y;
   y2 = l.p2.y;
 
   if(x1 == x2) {
-    return numeric_limits<float>::infinity();
+    return numeric_limits<T>::infinity();
   } else {
-    float m = (y2 - y1)/(x2 - x1);
+    T m = (y2 - y1)/(x2 - x1);
     return m;
   }
 }
 
-
-bool isPointOnSegment(Point2D p1, Point2D p2, Point2D q) {
-  float minx, maxx, miny, maxy;
+template <typename T>
+bool isPointOnSegment(Point2D<T> p1, Point2D<T> p2, Point2D<T> q) {
+  T minx, maxx, miny, maxy;
   minx = min(p1.x, p2.x);
   maxx = max(p1.x, p2.x);
   miny = min(p1.y, p2.y);
@@ -49,9 +52,9 @@ bool isPointOnSegment(Point2D p1, Point2D p2, Point2D q) {
   }
 }
 
-
-bool doesIntersect(Line l1, Line l2) {
-  Point2D p1, p2, q1, q2;
+template <typename T>
+bool doesIntersect(Line2D<T> l1, Line2D<T> l2) {
+  Point2D<T> p1, p2, q1, q2;
   p1 = l1.p1;
   p2 = l1.p2;
   q1 = l2.p1;
