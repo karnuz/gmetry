@@ -114,8 +114,9 @@ void test_grahamScan2() {
   vector<Point2D<float>>::iterator it = hull.begin();
 
   GLScene s;
-  s.addPoints2D(hull, hull.size(), "GL_LINE_LOOP");
   s.addPoints2D(points, N/2, "GL_POINTS");
+  s.addPoints2D(hull, hull.size(), "GL_LINE_LOOP");
+  
   
   s.draw();
 
@@ -138,23 +139,25 @@ public:
     cout << "Cursor Clicked at " << xpos << " : " << ypos << endl;
 
 
-    /*
+    
     float x = (float) xpos;
     float y = (float) ypos;
-    Point2D<float> p = {100*x, 100*y};
+    Point2D<float> p = {x, y};
     vector<Point2D<float>> newhull = c.incrementHull(hull,p);
-
+    hull = newhull;
+    
     cout << newhull.size() << "  newhull size\n";
     for(auto e: newhull) {
       cout << e << "this\n";
     }
     
     Point2D<float> points[] = {p};
-    
-    s.addPoints2D(newhull, newhull.size(), "GL_LINE_LOOP");
+
+    s.clear_last();
     s.addPoints2D(points, 1, "GL_POINTS");
-    cout << "2Cccccccursor Position at " << 100*xpos << " : " << 100*ypos << endl;
-    */
+    s.addPoints2D(newhull, newhull.size(), "GL_LINE_LOOP");
+    //    cout << "2Cccccccursor Position at " << 100*xpos << " : " << 100*ypos << endl;
+    
   }
 
 
@@ -176,16 +179,15 @@ public:
       points[i].x = vecOfRandomNums[2*i];
       points[i].y = vecOfRandomNums[2*i+1];
     }
-    
-    
+
     
     hull = c.grahamScan(points, N/2);
     
     cout << "\n\nhull\n";
     vector<Point2D<float>>::iterator it = hull.begin();
-    
-    s.addPoints2D(hull, hull.size(), "GL_LINE_LOOP");
+
     s.addPoints2D(points, N/2, "GL_POINTS");
+    s.addPoints2D(hull, hull.size(), "GL_LINE_LOOP");
     
     
     typedef void (TestIncremental::*Fun) (double x, double y);

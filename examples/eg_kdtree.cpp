@@ -11,12 +11,13 @@ class TestKDTree {
 
 private:
   KDTree<Point2D<double>> kd;
+  GLScene s;
 
 public:
   void test_createTree() {
   
     srand(time(0));
-    int N = 10000;
+    int N = 100;
     vector<double> vecOfRandomNums(N);
     
     generate(vecOfRandomNums.begin(), vecOfRandomNums.end(), []()
@@ -33,9 +34,34 @@ public:
     
     kd.createTree(points.begin(),points.end(),2, points.size());
 
-    vector<Point2D<double>> tr = kd.InOrder();
-    GLScene s;
+    vector<Point2D<double>> tr = kd.PreOrder();
     s.addPoints2D(tr, tr.size(), "GL_POINTS");
+
+    vector<Point2D<double>> grid;
+
+    cout << "grid\n";
+    
+    for (auto e: tr) {
+      cout << e << "\n";
+    }
+
+    for (int i = 0; i < tr.size(); i++) {
+      int j = i%2;
+      if (j == 0) {
+	Point2D<double> a = {tr[i][0],-30};
+	Point2D<double> b = {tr[i][0],30};
+	grid.push_back(a);
+	grid.push_back(b);
+      }
+      if(j == 1) {
+	Point2D<double> a = {-30,tr[i][1]};
+	Point2D<double> b = {30,tr[i][1]};
+	grid.push_back(a);
+	grid.push_back(b);
+      }
+    }
+
+    s.addPoints2D(grid, grid.size(), "GL_LINES");
     
     //  s.addPoints2D(points, N/2, "GL_POINTS");
     
@@ -46,23 +72,19 @@ public:
     
     s.draw();
     
-    //    Point2D<double> d = {7.29,-0.2};
-    //    Point2D<double> nn = kd.nearestNeighbor(&kd, d, 2);
-    
-    //    cout << "nearest neighbor to " << d << " is : " << nn;
-    //  for (auto e: tr) {
-    //  cout << e << "\n";
-    //}
-    
-    
   }
   
   void getNearestNeighbor(double xpos, double ypos) {
     Point2D<double> d = {xpos, ypos};
     Point2D<double> nn = kd.nearestNeighbor(&kd, d, 2);
     cout << "Cccursor Position at " << xpos << " : " << ypos << endl;
-
     cout << "Nearest neighbor is :" << nn << endl;
+
+    vector<Point2D<double>> v;
+    v.push_back(d);
+    v.push_back(nn);
+    
+    s.addPoints2D(v, v.size(), "GL_LINE_STRIP");
   }
 
 };

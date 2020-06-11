@@ -237,11 +237,20 @@ vector<Point2D<T>> ConvexHull<T>::incrementHull(const vector<Point2D<T>> hull, c
     }
   }
 
+  if(change_corners[0] == -1 && change_corners[1] == -1) {
+    return hull;
+  }
 
+  
   int idx = 0;
   bool inc = true;
 
-  for(int m = 0; m < hull.size(); m ++) {
+
+  int m = 0;
+  if (change_corners[1] < change_corners[0]) {
+    m = change_corners[1];
+  }
+  for(; m < hull.size(); m ++) {
     if(m != change_corners[idx]) {
       if(inc) {
 	newhull.push_back(hull[m]);

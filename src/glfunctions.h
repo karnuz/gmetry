@@ -32,8 +32,8 @@ class Mesh;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    glViewport(-width/2, -height/2, width/2, height/2);
-    glOrtho(-20,20,-20,20,-10,10);
+    glViewport(0, 0, width, height);
+    glOrtho(-30,30,-30,30,-10,10);
 }
 
 /*
@@ -110,14 +110,16 @@ public:
 
 private:
   void setPrimitive(string mthd) {
-    
-    if(mthd=="GL_LINE_STRIP") {
+
+    if(mthd=="GL_LINES") {
+      method = GL_LINES;
+    }
+    else if(mthd=="GL_LINE_STRIP") {
       method = GL_LINE_STRIP;
     }
     else if(mthd=="GL_POINTS") {
       method = GL_POINTS;
       glEnable(GL_PROGRAM_POINT_SIZE);
-      
     }
     else if(mthd=="GL_LINE_LOOP") {
       method = GL_LINE_LOOP;
@@ -174,7 +176,7 @@ public:
       //"uniform mat4 u_view;"
       "void main() {"
       "  gl_Position = u_proj * vec4(vp, 1.0);"
-      "  gl_PointSize = 3.0;"
+      "  gl_PointSize = 6.0;"
       "}";
     
     const char* fragment_shader =
@@ -202,6 +204,14 @@ public:
   }
 
 
+  void clear_last() {
+    meshes.erase(meshes.end()-1);
+  }
+  
+  void clear() {
+    meshes.clear();
+  }
+  
   void addMesh(Mesh mesh) {
     meshes.push_back(mesh);
   }
@@ -285,8 +295,8 @@ public:
 
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
-    glViewport(-width/2, -height/2, width, height);
-    glOrtho(-20, 20, -20, 20,-10,10);
+    glViewport(0, 0, width, height);
+    glOrtho(-30, 30, -30, 30,-10,10);
 
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -306,7 +316,6 @@ public:
 
     cout << width << "\n";
     cout << height << "\n";
-    glOrtho(-10,10,-10,10,-10,10);
 
     while(!glfwWindowShouldClose(window)){
       view->draw();
@@ -341,13 +350,12 @@ public:
 	  glfwGetCursorPos(w, &xpos, &ypos);
 	  int width, height;
 	  glfwGetFramebufferSize(w, &width, &height);
-      	  static_cast<MyGLWindow<F,C>*>(glfwGetWindowUserPointer(w))->mouseButtonPressed(2*xpos/width, 2*ypos/height);
+      	  static_cast<MyGLWindow<F,C>*>(glfwGetWindowUserPointer(w))->mouseButtonPressed(60*(-0.5 + (2*xpos/width)), 60*(0.5 - (2*ypos/height)));
 	  // func(xpos,ypos);
-	  //cout << "Cursor Position is " << xpos << " : " << ypos << endl;
+	  //	  cout << "Cursor Position is " << xpos << " : " << ypos << " width: " << width << " height " << height << endl;
 	}
     };
 
-    cout << "here\n";
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     
   }

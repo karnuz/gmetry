@@ -67,6 +67,13 @@ public:
     scene->addMesh(mesh);
   }
 
+  void clear() {
+    scene->clear();
+  }
+
+  void clear_last() {
+    scene->clear_last();
+  }
 
   void draw() {
 
