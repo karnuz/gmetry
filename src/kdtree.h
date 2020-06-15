@@ -119,9 +119,93 @@ public:
       }
     }
     return bestNode->GetData();
+  }
+
+
+
+  T nearestNeighbor2(KDTree<T> *tree ,T data, int dim) {
+
+    
+    if(tree->isEmpty()) {
+      throw std::invalid_argument("tree is empty\n");;
+    }
+    
+    Node<T> * ptr = tree->getRoot();
+    int level = 0;
+    
+    //cout << bestNode->GetData();
+    stack<tuple<Node<T> *, int>> st;
+    st.push(tuple(ptr,level));
+
+
+    while(true) {
+      T ndata = ptr->GetData();
+      int split_idx = level%dim;
+      if (data[split_idx] <= ndata[split_idx]) {
+	if(ptr->IsLeft()) {
+	  level += 1;
+	  ptr = ptr->GetLeft();
+	  st.push(tuple(ptr,level));
+	} else {
+	  break;
+	}
+      }
+      else {
+	  if(ptr->IsRight()) {
+	    level += 1;
+	    ptr = ptr->GetRight();
+	    st.push(tuple(ptr,level));
+	  }
+	  else {
+	    break;
+	  }
+	}
+    }
+
+    int N = st.size();
+    int k = 0;
+    Node<T>* bestNode = ptr;
+    double bestDist = (double) distSq(data, bestNode->GetData());
+    
+    //cout << "best distance : " << bestDist << "\n";
+    while(!st.empty()) {
+      
+      auto t = st.top();
+      st.pop();
+      ptr = get<0>(t);
+      level = get<1>(t);
+      
+      T ndata = ptr->GetData();
+      double d = (double) distSq(data, ndata);
+      if (d < bestDist) {
+	bestDist = d;
+	bestNode = ptr;
+      }
+      int split_idx = level%dim;
+
+      // point on right/up/greater side of split index
+      if (data[split_idx] >= ndata[split_idx]) {
+	if(abs(data[split_idx] - ndata[split_idx]) < bestDist && ptr->IsLeft()) {
+	  st.push(tuple(ptr->GetLeft(),level+1));
+	}
+	if(ptr->IsRight() && k >= N) {
+	  st.push(tuple(ptr->GetRight(), level + 1));
+	}
+      }
+      else {
+	if(ptr->IsLeft() && k >= N) {
+	  st.push(tuple(ptr->GetLeft(),level+1));
+	}
+	if(abs(data[split_idx] - ndata[split_idx]) < bestDist && ptr->IsRight()) {
+	  st.push(tuple(ptr->GetRight(),level+1));
+	}
+      }
+      k += 1;
+    }
+    return bestNode->GetData();
 
   }
-  
+
   
 };
 

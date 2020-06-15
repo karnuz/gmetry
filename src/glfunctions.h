@@ -101,7 +101,6 @@ public:
 
   }
 
-
   void draw() {
     glBindVertexArray(vao);
     glDrawArrays(method, 0, size);
@@ -153,13 +152,13 @@ private:
 
 
 
-
 class Scene {
 public:
   
   GLuint shader_programme;
 
   vector<Mesh> meshes;
+
   
 
   Scene() {
