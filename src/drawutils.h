@@ -44,7 +44,7 @@ public:
       points[3*i + 2] = 0.0f;
     }
 
-    cout<< size << "\n";
+    //cout<< size << "\n";
     int slide = 3;
     Mesh mesh(points, size, 3, primitive);
     scene->addMesh(mesh);
@@ -61,7 +61,7 @@ public:
       points[3*i + 2] = 0.0f;
     }
 
-    cout<< size << "\n";
+    //cout<< size << "\n";
     int slide = 3;
     Mesh mesh(points, size, 3, primitive);
     scene->addMesh(mesh);

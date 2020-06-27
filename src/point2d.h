@@ -1,6 +1,7 @@
 #ifndef _POINTS_H_
 #define _POINTS_H_
 
+#include <math.h>
 using namespace std;
 
 template<typename T>
@@ -54,11 +55,17 @@ T distSq(const Point2D<T> &p1, const Point2D<T> &p2) {
   return a*a + b*b;
 }
 
+template <typename T>
+T dist(const Point2D<T> &p1, const Point2D<T> &p2) {
+  
+  return sqrt(distSq(p1,p2));
+}
+
 template<class T>
 ostream& operator<<(ostream& os, const Point2D<T>& t)
 {
   
-  os << t.x << " " << t.y << "\n";
+  os << t.x << " " << t.y ;
   return os;
 }
 

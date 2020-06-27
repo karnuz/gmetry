@@ -14,14 +14,14 @@ private:
   GLScene s;
 
 public:
-  TestQuadTree() : qd(-30,30,-30,30,5)
+  TestQuadTree() : qd(-20,20,-20,20,5)
   {
   }
   
   void test_createTree() {
   
     srand(time(0));
-    int N = 10000;
+    int N = 1000;
     vector<double> vecOfRandomNums(N);
     
     generate(vecOfRandomNums.begin(), vecOfRandomNums.end(), []()
@@ -44,6 +44,9 @@ public:
     
     vector<Point2D<double>> tr = qd.bfs();
     s.addPoints2D(tr, tr.size(), "GL_POINTS");
+
+    vector<Point2D<double>> bd = qd.getBounds();
+    s.addPoints2D(bd, bd.size(), "GL_LINES");
     
     //  s.addPoints2D(points, N/2, "GL_POINTS");
     
@@ -59,21 +62,25 @@ public:
 
   
   void getNearestNeighbor(double xpos, double ypos) {
+
+    std::clock_t start;
+    double duration;
+    start = std::clock();
+
     Point2D<double> pt = {xpos, ypos};
     Point2D<double> nn = qd.nearestNeighbor(pt);
     cout << "Cccursor Position at " << xpos << " : " << ypos << endl;
     cout << "Nearest neighbor is :" << nn << endl;
+
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+    cout<< "Time taken: "<< duration <<'\n';
 
     vector<Point2D<double>> v;
     v.push_back(pt);
     v.push_back(nn);
     
     s.addPoints2D(v, v.size(), "GL_LINE_STRIP");
-  }
-
-
-
-  
+  }  
 
 };
   

@@ -6,6 +6,7 @@
 #include "math.h"
 #include "exceptions.h"
 #include "utils.h"
+#include "float.h"
 
 using namespace std;
 
@@ -45,6 +46,7 @@ public:
   virtual int bucketsize() = 0;
   
   bool IsPointInQuad(T data) {
+    //cout << xmin << " " << xmax << " " << ymin << " " << ymax << "\n"; 
     if (data[0] <= xmax && data[0] >= xmin && data[1] <= ymax && data[1] >= ymin) {
       return true;
     }
@@ -57,6 +59,9 @@ public:
 
   virtual struct PtInfo<T> nearestNeighbor(T p, struct PtInfo<T> nn) = 0;
 
+  virtual PtInfo<T> findNearestPointInQuad(T p) = 0;
+
+  virtual vector<T> getBounds() = 0;
 };
 
 
@@ -77,18 +82,89 @@ public:
     //    return -1;
   }
 
+  vector<T> getBounds() {
+    vector<T> a = bl->getBounds();
+    vector<T> b = br->getBounds();
+    vector<T> c = tl->getBounds();
+    vector<T> d = tr->getBounds();
+    //cout << a.size() << "size a" << "\n";
+    //cout << b.size() << "size b" << "\n";
+    //cout << c.size() << "size c" << "\n";
+    //cout << d.size() << "size d" << "\n";
+    a.insert(
+      a.end(),
+      std::make_move_iterator(b.begin()),
+      std::make_move_iterator(b.end())
+    );
+    a.insert(
+      a.end(),
+      std::make_move_iterator(c.begin()),
+      std::make_move_iterator(c.end())
+    );
+    a.insert(
+      a.end(),
+      std::make_move_iterator(d.begin()),
+      std::make_move_iterator(d.end())
+    );
+
+    return a;
+  }
+
   T nearestNeighbor(T p) {
+    if(this->empty()) {
+      throw no_point_in_quad_exception;
+    }
     T q;
     struct PtInfo<T> nn;
-    nn.d = 100000.0;
-    nn.data = q;
+    nn = this->findNearestPointInQuad(p);
+    //cout << nn.data << "  this \n";
+    //nn.d = 100000.0;
+      //nn.data = q;
     nn = this->nearestNeighbor(p, nn);
     return nn.data;
   }
 
 
+  // should be renamed - this name gives wrong impression
+  struct PtInfo<T> findNearestPointInQuad(T p) {
+    //cout << "point is " << p << "\n";
+    if(!this->IsPointInQuad(p)) {
+      PtInfo<T> nn;
+      nn.d = DBL_MAX;
+      return nn;
+    }
+    if(bl->IsPointInQuad(p) && !bl->empty()) {
+      return bl->findNearestPointInQuad(p);
+    }
+    else if(br->IsPointInQuad(p) && !br->empty()) {
+      return br->findNearestPointInQuad(p);
+    }
+    else if(tl->IsPointInQuad(p) && !tl->empty()) {
+      return tl->findNearestPointInQuad(p);
+    }
+    else if(tr->IsPointInQuad(p) && !tr->empty()) {
+      return tr->findNearestPointInQuad(p);
+    } else {
+      //cout << "hhhereree\n";
+      vector<T> v = bfs();
+      PtInfo<T> nn;
+      nn.data = v[0];
+      nn.d = dist(p, v[0]);
+      for(auto e: v) {
+	//cout << "all: " << e;
+	double d = dist(p,e);
+	if(d < nn.d) {
+	  nn.d = d;
+	  nn.data = e;
+	}
+      }
+      return nn;
+    }
+  }
+
+
   vector<T> bfs() {
-    cout <<",boundarynode,datasize:" << this->bucket_size << "\n";
+    //cout <<",boundarynode,datasize:" << this->bucket_size << "\n";
     vector<T> a = this->bl->bfs();
     vector<T> b = this->br->bfs();
     vector<T> c = this->tr->bfs();
@@ -145,7 +221,8 @@ public:
     if (p[0] < this->xmin - nn.d || p[0] > this->xmax + nn.d || p[1] < this->ymin - nn.d || p[1] > this->ymax + nn.d) {
       return nn;
     }
-    
+
+    /*
     // redefine nn
     if(!bl->empty()) {
       if (p[0] < bl->xmin - nn.d || p[0] > bl->xmax + nn.d || p[1] < bl->ymin - nn.d || p[1] > bl->ymax + nn.d) {
@@ -194,6 +271,7 @@ public:
 	nn.d = min(nn.d, max(max(max(a,b),c),d));
       }
     }
+    */
 
     if(!bl->empty()) {
       nn = bl->nearestNeighbor(p, nn);
@@ -231,9 +309,30 @@ public:
     return data.size();
   }
 
+  vector<T> getBounds() {
+    vector<T> v;
+    T a = {this->xmin,this->ymin};
+    T b = {this->xmax,this->ymin};
+    T c = {this->xmax,this->ymax};
+    T d = {this->xmin,this->ymax};
+    v.push_back(a);
+    v.push_back(b);
+    v.push_back(b);
+    v.push_back(c);
+    v.push_back(c);
+    v.push_back(d);
+    v.push_back(d);
+    v.push_back(a);
+    
+    return v;
+  }
+
   PtInfo<T> nearestNeighbor(T p, PtInfo<T> nn) {
+    if(this->data.size() == 0) {
+      throw no_point_in_quad_exception;
+    }
     for(auto e: data) {
-      double d = distSq(p,e);
+      double d = dist(p,e);
       if(d < nn.d) {
 	nn.d = d;
 	nn.data = e;
@@ -242,11 +341,22 @@ public:
     return nn;
   }
 
+  PtInfo<T> findNearestPointInQuad(T p) {
+    T n = this->nearestNeighbor(p);
+    PtInfo<T> nn;
+    nn.d = dist(p,n);
+    nn.data = n;
+    return nn;
+  }
+
   T nearestNeighbor(T p) {
+    if(this->data.size() == 0) {
+      throw no_point_in_quad_exception;
+    }
     T n = this->data[0];
-    double b = distSq(p,n);
+    double b = dist(p,n);
     for(auto e: this->data) {
-      double d = distSq(p,e);
+      double d = dist(p,e);
       if(d < b) {
 	n = e;
 	b = d;
@@ -256,7 +366,7 @@ public:
   }
 
   vector<T> bfs() {
-    cout << this->MAX_BUCKET_SIZE <<",datanode,datasize:" << data.size() << "\n";
+    //cout << this->MAX_BUCKET_SIZE <<",datanode,datasize:" << data.size() << "\n";
     return data;
   }
 
@@ -343,6 +453,10 @@ public:
 
   T nearestNeighbor(T p) {
     return this->root->nearestNeighbor(p);
+  }
+
+  vector<T> getBounds() {
+    return this->root->getBounds();
   }
 };
   

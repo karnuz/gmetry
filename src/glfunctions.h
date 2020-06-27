@@ -285,7 +285,7 @@ public:
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     //glfwWindowHint(GLFW_OPENGL_ANY_PROFILE,GLFW_OPENGL_ANY_PROFILE);
-    window = glfwCreateWindow(1280, 960, "Hello", NULL, NULL);
+    window = glfwCreateWindow(960, 960, "Hello", NULL, NULL);
     if (!window) {
       fprintf(stderr, "ERROR: could not open window with GLFW3\n");
       glfwTerminate();

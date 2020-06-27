@@ -5,20 +5,14 @@
 using namespace std;
 
 
-float min(float a, float b);
-
-float max(float a, float b);
 
 template <typename T>
-void swap(int i, int j, vector<T> &v);
-
-
-
-float min(float a, float b) {
+T minn(T a, T b) {
   return (a>b)?b:a;
 }
 
-float max(float a, float b) {
+template <typename T>
+T maxx(T a, T b) {
   return (a>b)?a:b;
 }
 

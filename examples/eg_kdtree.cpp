@@ -3,6 +3,8 @@
 #include <vector>
 #include "drawutils.h"
 #include <queue>
+#include <ctime>
+
 
 using namespace std;
 
@@ -11,45 +13,60 @@ class TestKDTree {
 
 private:
   KDTree<Point2D<double>> kd;
+  KDTree<Point2D<double>> kds;
   GLScene s;
 
 public:
   void test_createTree() {
   
-    srand(time(0));
-    int N = 50;
+    srand(0);
+    int N = 1000;
+ 
     vector<double> vecOfRandomNums(N);
     
     generate(vecOfRandomNums.begin(), vecOfRandomNums.end(), []()
 							     {
 							       return static_cast <double> (rand() % 2000 - 1000)/50.0;
-                                                           });
+							     });
     
     vector<Point2D<double>> points(N/2);
     
     for (int i = 0; i < N/2; i++) {
       points[i].x = vecOfRandomNums[2*i];
       points[i].y = vecOfRandomNums[2*i+1];
+      kds.insert(points[i],2);
     }
     
     kd.createTree(points.begin(),points.end(),2, points.size());
 
     vector<Point2D<double>> tr = kd.PreOrder();
+    //cout << "trsize: " << tr.size() << "\n";
+    
     s.addPoints2D(tr, tr.size(), "GL_POINTS");
 
 
-    cout << "grid\n";
+    //cout << "grid\n";
     
-    for (auto e: tr) {
-      cout << e << "\n";
-    }
 
 
     vector<Point2D<double>> grid;
     Node<Point2D<double>>* ptr = kd.getRoot();
     queue<tuple<Node<Point2D<double>> *, double, double, double, double, int>> v;
-    v.push(tuple(ptr,-30,30,-30,30,0));
+    v.push(tuple(ptr,-20,20,-20,20,0));
 
+    Point2D<double> a = {-20,-20};
+    Point2D<double> b = {20,-20};
+    Point2D<double> c = {20,20};
+    Point2D<double> d = {-20,20};
+    grid.push_back(a);
+    grid.push_back(b);
+    grid.push_back(b);
+    grid.push_back(c);
+    grid.push_back(c);
+    grid.push_back(d);
+    grid.push_back(d);
+    grid.push_back(a);
+    
     while(!v.empty()) {
       auto t = v.front();
       v.pop();
@@ -130,18 +147,45 @@ public:
   }
   
   void getNearestNeighbor(double xpos, double ypos) {
-    Point2D<double> d = {xpos, ypos};
-    Point2D<double> nn = kd.nearestNeighbor2(&kd, d, 2);
-    cout << "Cccursor Position at " << xpos << " : " << ypos << endl;
-    cout << "Nearest neighbor is :" << nn << endl;
 
-    Point2D<double> nn2 = kd.nearestNeighbor(&kd, d, 2);
+    cout << "Cursor Position at " << xpos << " : " << ypos << endl;
+
+    std::clock_t start;
+    double duration;
+
+    Point2D<double> d = {xpos, ypos};
+
+    /*
+    start = std::clock();
+    Point2D<double> nn = kd.nearestNeighbor(&kd, d, 2);
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+
+    cout<< "Time taken: "<< duration <<'\n';
+    */
+    
+    start = std::clock();
+    Point2D<double> nn3 = kds.nearestNeighbor2(&kd, d, 2);
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+    cout<< "Time taken Seq new: "<< duration <<"\n\n";
+
+    start = std::clock();
+    Point2D<double> nn2 = kd.nearestNeighbor2(&kd, d, 2);
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+    cout<< "Time taken new: "<< duration <<"\n\n";
+
+    cout << "Nearest neighbor is :" << nn2 << endl;
+
+    
+
+
 
     vector<Point2D<double>> v;
-    v.push_back(d);
-    v.push_back(nn);
+    //v.push_back(d);
+    //v.push_back(nn);
     v.push_back(d);
     v.push_back(nn2);
+    v.push_back(d);
+    v.push_back(nn3);
     
     s.addPoints2D(v, v.size(), "GL_LINE_STRIP");
     //    s.addPoints2D(v, v.size(), "GL_LINE_STRIP");

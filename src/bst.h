@@ -381,17 +381,38 @@ public:
         while(ptr != NULL)
         {
 	  out.push_back(ptr->GetData());
-
-            if(ptr->IsRight())
-                s.push(ptr->GetRight());
-
-            if(ptr->IsLeft())
-                ptr = ptr->GetLeft();
-            else
+	  
+	  //	  if(ptr->GetData()[0] > 5.7 && ptr->GetData()[0] < 5.8){
+	  //cout<< "parent: " <<ptr->GetData();
+	  //}
+	  
+	  if(ptr->IsRight()){
+	    s.push(ptr->GetRight());
+	    
+	    //if(ptr->GetRight()->GetData()[0] >= -20 && ptr->GetRight()->GetData()[0] <= 20){
+	    //cout << "rightchild:" << ptr->GetRight()->GetData();
+	    //}
+	    
+	  }
+	  
+	  if(ptr->IsLeft()) {
+	    
+	    //if(ptr->GetLeft()->GetData()[0] >= -20 && ptr->GetLeft()->GetData()[0] <= -15.0){
+	    //  cout << "leftchild:" << ptr->GetLeft()->GetData();
+	    //}
+	    
+	    ptr = ptr->GetLeft();
+	    
+	    
+	  }
+	  else
             {
-                ptr = s.top();
-                s.pop();
+	      ptr = s.top();
+	      s.pop();
             }
+
+	  //cout << " ";
+
         }
 
 	return out;
