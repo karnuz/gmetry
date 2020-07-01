@@ -259,10 +259,129 @@ public:
 	N = N-1;
       }
     }
-    cout << "num_nodes_visited_new:" << nnv << "\n";
+    //   cout << "num_nodes_visited_second:" << nnv << "\n";
+    return bestNode->GetData();
+
+  }
+
+
+
+
+  T nearestNeighbor3(KDTree<T> *tree ,T data, int dim) {
+    
+    if(tree->isEmpty()) {
+      throw std::invalid_argument("tree is empty\n");
+    }
+    
+    Node<T> * ptr = tree->getRoot();
+    int level = 0;
+    
+    //cout << bestNode->GetData();
+    vector<tuple<Node<T> *, int, int>> st;
+    st.push_back(tuple(ptr,level,0));
+
+
+    while(true) {
+      T ndata = ptr->GetData();
+      int split_idx = level%dim;
+      if (data[split_idx] <= ndata[split_idx]) {
+	if(ptr->IsLeft()) {
+	  level += 1;
+	  ptr = ptr->GetLeft();
+	  st.push_back(tuple(ptr,level,0));
+	} else {
+	  break;
+	}
+      }
+      else {
+	if(ptr->IsRight()) {
+	  level += 1;
+	  ptr = ptr->GetRight();
+	  st.push_back(tuple(ptr,level,0));
+	}
+	else {
+	  break;
+	}
+      }
+    }
+
+    
+    int N = st.size();
+    Node<T>* bestNode = ptr;
+    double bestDist = (double) dist(data, bestNode->GetData());
+    int k;
+
+    int nnv = 0;
+    //    cout << "stack:\n";
+    
+    //cout << "best distance : " << bestDist << "\n";
+    while(!st.empty()) {
+   
+      for(auto e: st) {
+	Node<T>* ee = get<0>(e);
+	//	cout << (*ee).GetData() << " ";
+      }
+      //cout << "\n";
+
+      k = st.size();
+      auto t = st[st.size()-1];
+      st.erase(st.end()-1);
+
+      ptr = get<0>(t);
+      level = get<1>(t);
+      int cond = get<2>(t);
+      int split_idx = level%dim;
+      T ndata = ptr->GetData();
+      double d = (double) dist(data, ndata);
+
+      if(cond == 0) {
+
+	nnv += 1;
+	if (d < bestDist) {
+	  bestDist = d;
+	  bestNode = ptr;
+	}
+	//cout << bestNode->GetData() << " :best node\n";
+	
+      // point on right/up/greater side of split index
+	if (data[split_idx] <= ndata[split_idx]) {
+	  if(abs(data[split_idx] - ndata[split_idx]) < bestDist && ptr->IsRight() && cond == 0) {
+	    st.push_back(tuple(ptr,level,1));
+	  }
+	  if(ptr->IsLeft() && k > N && cond == 0) {
+	    st.push_back(tuple(ptr->GetLeft(),level+1,0));
+	  }
+	}
+	else {
+	  if(abs(data[split_idx] - ndata[split_idx]) < bestDist && ptr->IsLeft() && cond == 0) {
+	  st.push_back(tuple(ptr,level,1));
+	  }
+	  if(ptr->IsRight() && k > N && cond == 0) {
+	    st.push_back(tuple(ptr->GetRight(), level+1,0));
+	  }
+	}
+	if(k <= N) {
+	  N = N-1;
+	}
+      } else {
+	if (data[split_idx] <= ndata[split_idx]) {
+	  if(abs(data[split_idx] - ndata[split_idx]) < bestDist && ptr->IsRight()) {
+	    st.push_back(tuple(ptr->GetRight(),level+1,0));
+	  }
+	}
+	else {
+	  if(abs(data[split_idx] - ndata[split_idx]) < bestDist && ptr->IsLeft()) {
+	    st.push_back(tuple(ptr->GetLeft(),level+1,0));
+	  }
+	}
+	assert(k>N);
+      }
+    }
+    //    cout << "num_nodes_visited_third:" << nnv << "\n";
     return bestNode->GetData();
 
   }  
+
 };
 
 #endif

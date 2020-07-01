@@ -44,7 +44,7 @@ public:
     
 
     
-    int M = 1000;
+    int M = 100000;
     vector<double> testVec(M);
     generate(testVec.begin(), testVec.end(), []()
 					     {
@@ -115,7 +115,7 @@ public:
 
   Point2D<double> getNearestNeighbor(Point2D<double> p) {
     
-    Point2D<double> nn = kd.nearestNeighbor2(&kd, p, 2);
+    Point2D<double> nn = kd.nearestNeighbor3(&kd, p, 2);
     return nn;
   }
 

@@ -1,4 +1,4 @@
-#include "kdtOAree.h"
+#include "kdtree.h"
 #include "quadtree.h"
 #include "point2d.h"
 #include <vector>
@@ -137,7 +137,7 @@ public:
     
     
   Point2D<double> getNearestNeighbor(Point2D<double> p) {
-    Point2D<double> nn = kd.nearestNeighbor(&kd, p, 2);
+    Point2D<double> nn = kd.nearestNeighbor3(&kd, p, 2);
     return nn;
   }
   
@@ -147,7 +147,7 @@ public:
   }
 
   Point2D<double> getNearestNeighborS(Point2D<double> p) {
-    Point2D<double> nn = kds.nearestNeighbor(&kd, p, 2);
+    Point2D<double> nn = kds.nearestNeighbor3(&kd, p, 2);
     return nn;
   }
   
@@ -161,14 +161,14 @@ public:
   
 int main() {
 
-  //  srand(time(0));
-  srand(0);
-  int N = 100000;
+  srand(time(0));
+  //srand(0);
+  int N = 1000;
   vector<double> vecOfRandomNums(N);
   
   generate(vecOfRandomNums.begin(), vecOfRandomNums.end(), []()
 							   {
-							     return static_cast <double> (rand() % 2000 - 1000)/50.0;
+							     return static_cast <double> (rand() % 2000 - 1000)/0.5;
                                                            });
   
   vector<Point2D<double>> points(N/2);
@@ -180,11 +180,11 @@ int main() {
 
 
 
-  int M = 1000;
+  int M = 2000;
   vector<double> testVec(M);
   generate(testVec.begin(), testVec.end(), []()
 					   {
-					     return static_cast <double> (rand() % 2000 - 1000)/50.0;
+					     return static_cast <double> (rand() % 2000 - 1000)/0.5;
 					     });
   
   vector<Point2D<double>> tpoints(M/2);
@@ -199,7 +199,7 @@ int main() {
   t.test_kdTree(points, tpoints);
 
 
-  TestQuadTree q(-20,20,-20,20,5);
+  TestQuadTree q(-2000,2000,-2000,2000,5);
   q.test_quadTree(points, tpoints);
   
   return 0;
