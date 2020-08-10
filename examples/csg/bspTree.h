@@ -24,6 +24,10 @@ private:
     Node(std::array<float,4> &pl) : plane(pl)
     {
     }
+
+    Node() {
+      plane = std::array<float,4>{{0,0,0,0}};
+    }
     
     Node* addTriangle(std::array<unsigned, 3> triangle_indices) {
       triangles.push_back(triangle_indices[0]);
@@ -103,7 +107,8 @@ public:
 
   BSPTree() {
   }
-  
+
+  /*
   BSPTree(util::PolygonMesh<VertexType>& mesh) {
     cout << root << "   this is root\n";
     vertices = mesh.getVertexAttributes();
@@ -122,6 +127,7 @@ public:
       //pp = 0;
     }
   }
+  */
 
   BSPTree<VertexType>* transformTree(glm::mat4 transform) {
     BSPTree<VertexType>* newtree = new BSPTree();
@@ -164,102 +170,155 @@ public:
   }
 
 
-  Node* addTriangle(Node* node, std::array<unsigned int, 3> triangle_indices) {
+  BSPTree(util::PolygonMesh<VertexType>& mesh) {
+    vertices = mesh.getVertexAttributes();
+    polygon_indices = mesh.getPrimitives();
+    int k = 0;
+
+    root = new Node();
+    root = addTriangleEff(root, polygon_indices);
+  }
+      
+  Node * addTriangleEff(Node* inode, std::vector<unsigned int> in_polygon_indices) {
+
+    int p = 0;
     
 
-    cout << "adding triangle\n";
-    
-    std::array<VertexType, 3> triangle = {vertices[triangle_indices[0]], vertices[triangle_indices[1]], vertices[triangle_indices[2]]};    
+    std::queue<std::tuple<Node* , std::vector<unsigned int>>> ntv;
+    ntv.push(std::tuple<Node*,std::vector<unsigned int>>(inode, in_polygon_indices));
 
-    
-    for (auto v: triangle) {
-      auto p = v.getData("position");
-      cout << pp <<" :(" << p[0] << "," << p[1] << "," << p[2] << ")";
-      pp += 1;
-    }
-    
+    while(ntv.size() > 0) {
+      std::vector<unsigned int> front;
+      std::vector<unsigned int> back;
+      std::vector<unsigned int> coplanar;
 
-    int a = vertex_orientation_wrt_plane(triangle[0], node->plane);
-    int b = vertex_orientation_wrt_plane(triangle[1], node->plane);
-    int c = vertex_orientation_wrt_plane(triangle[2], node->plane); 
-
-    VertexType ab;
-    VertexType bc;
-    VertexType ca;
-    unsigned int ab_index;
-    unsigned int bc_index;
-    unsigned int ca_index;
-
-    //    cout << "abc: " << a << "," << b << "," << c << "\n";
-    
-    if(a*b == -1) {
-      //throw runtime_error("ab less than one\n");
-      ab = findIntersection(node->plane, triangle[0], triangle[1]);
-      vertices.push_back(ab);
-      ab_index = vertices.size() - 1;
-    }
-    if(b*c == -1) {
-      //throw runtime_error("bc less than one\n");
-      bc = findIntersection(node->plane, triangle[1], triangle[2]);
-      vertices.push_back(bc);
-      bc_index = vertices.size() - 1;
-    }
-    if(c*a == -1) {
-      //throw runtime_error("ca less than one\n");
-      ca = findIntersection(node->plane, triangle[2], triangle[0]);
-      vertices.push_back(ca);
-      ca_index = vertices.size() - 1;
-    }
-    
-    if(a == 0 && b == 0 && c == 0) {
-      node->addTriangle(triangle_indices);
-      return node;
-    }
-    
-    else if ((a <= 0 && b <=0 && c <= 0)) {
-      if (node->behind == NULL) {
-	std::array<float,4> plane = calculate_plane_from_points(triangle);
-	node->behind = new Node(plane);
-	node->behind->addTriangle(triangle_indices);
-      } else {
-	//	cout << "calling now\n";
-	node->behind = addTriangle(node->behind, triangle_indices);
+    p += 1;
+      auto e = ntv.front();
+      ntv.pop();
+      auto node = get<0>(e);
+      auto polygon_indices = get<1>(e);
+      //cout << polygon_indices.size() << " :size\n";
+      
+      int k = 0;
+      if(node->plane == std::array<float,4>{{0,0,0,0}}) {
+	while(true) {
+	  std::array<unsigned int, 3> triangle_indices = {polygon_indices[k],polygon_indices[k+1],polygon_indices[k+2]};
+	  std::array<VertexType, 3> triangle = {vertices[triangle_indices[0]], vertices[triangle_indices[1]], vertices[triangle_indices[2]]};
+	  k += 3;
+	  std::array<float,4> pl;
+	  try {
+	    pl = calculate_plane_from_points(triangle); // add try block around this
+	  }
+	  catch (NormalZero_Exception& e) {
+	    cout << "zero exception occured\n";
+	    continue;
+	  }
+	  node->plane = pl;
+	  root->addTriangle(triangle_indices);
+	  break;
+	}
       }
-      return node;
-    }
-    else if (a >= 0 && b >= 0 && c >= 0) {
-      if (node->infront == NULL) {
-	std::array<float,4> plane = calculate_plane_from_points(triangle);
-	node->infront = new Node(plane);
-	node->infront->addTriangle(triangle_indices);
-      } else {
-	node->infront = addTriangle(node->infront, triangle_indices);
-      }
-      return node;
-    }
-    // 12 splitting cases here
-    else {
-      std::array<float,4> plane = calculate_plane_from_points(triangle);
 
-      if (a == 1 && b == -1 && c == 0) {
+      std::vector<unsigned int> next;
+      next.insert(next.end(), polygon_indices.begin() + k, polygon_indices.end());
+
+      splitList(next, front, back, coplanar, node->plane);
+      node->triangles = coplanar;
+
+      //      cout << front.size() << " :front size\n";
+      //     cout << back.size() << " :back size\n";
+      //cout << coplanar.size() << " :coplanar size\n";
+
+      
+      if(front.size() > 0) {
+	if (node->infront == NULL) {
+	  node->infront = new Node();
+	}
+	ntv.push(std::tuple<Node*,std::vector<unsigned int>>(node->infront, front));
+      }
+      if(back.size() > 0) {
+	if (node->behind == NULL) {
+	  node->behind = new Node();
+	}
+	ntv.push(std::tuple<Node*,std::vector<unsigned int>>(node->behind, back));
+      }
+    }
+    return inode;
+  }
+
+
+  void splitList(std::vector<unsigned int> indices, std::vector<unsigned int>& front, std::vector<unsigned int>& back, std::vector<unsigned int>& coplanar, std::array<float,4> plane) {
+
+    //    cout << indices.size() << "isss\n";
+    for(int j = 0; j < indices.size(); j += 3 ) {
+
+      std::array<unsigned int, 3> triangle_indices = {indices[j+0], indices[j+1], indices[j+2]};
+      std::array<VertexType, 3> triangle = {vertices[triangle_indices[0]], vertices[triangle_indices[1]], vertices[triangle_indices[2]]};
+      
+      int a = vertex_orientation_wrt_plane(triangle[0], plane);
+      int b = vertex_orientation_wrt_plane(triangle[1], plane);
+      int c = vertex_orientation_wrt_plane(triangle[2], plane); 
+      
+      VertexType ab;
+      VertexType bc;
+      VertexType ca;
+      unsigned int ab_index;
+      unsigned int bc_index;
+      unsigned int ca_index;
+      
+      //cout << "abc: " << a << "," << b << "," << c << "\n";
+      
+      if(a*b == -1) {
+	//throw runtime_error("ab less than one\n");
+	ab = findIntersection(plane, triangle[0], triangle[1]);
+	vertices.push_back(ab);
+	ab_index = vertices.size() - 1;
+      }
+      if(b*c == -1) {
+	//throw runtime_error("bc less than one\n");
+	bc = findIntersection(plane, triangle[1], triangle[2]);
+	vertices.push_back(bc);
+	bc_index = vertices.size() - 1;
+      }
+      if(c*a == -1) {
+	//throw runtime_error("ca less than one\n");
+	ca = findIntersection(plane, triangle[2], triangle[0]);
+	vertices.push_back(ca);
+	ca_index = vertices.size() - 1;
+      }
+      
+      if(a == 0 && b == 0 && c == 0) {
+	coplanar.push_back(triangle_indices[0]);
+	coplanar.push_back(triangle_indices[1]);
+	coplanar.push_back(triangle_indices[2]);
+      }
+    
+      else if ((a <= 0 && b <=0 && c <= 0)) {
+	back.push_back(triangle_indices[0]);
+	back.push_back(triangle_indices[1]);
+	back.push_back(triangle_indices[2]);
+      }
+      else if (a >= 0 && b >= 0 && c >= 0) {
+	front.push_back(triangle_indices[0]);
+	front.push_back(triangle_indices[1]);
+	front.push_back(triangle_indices[2]);
+      }
+      // 12 splitting cases here
+      else if (a == 1 && b == -1 && c == 0) {
 	std::array<VertexType,3> t1 = {triangle[0], ab, triangle[2]};//front
 	std::array<VertexType,3> t2 = {ab, triangle[1], triangle[2]};//behind
 
 	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], ab_index, triangle_indices[2]};
 	std::array<unsigned int, 3> t2_indices = {ab_index, triangle_indices[1], triangle_indices[2]};
 
-	if (node->infront == NULL) {
-	  node->infront = new Node(plane);
-	  node->infront->addTriangle(t1_indices);
-	} else {
-	  node->infront = addTriangle(node->infront, t1_indices);
-	}
-	if (node->behind == NULL) {
-	  node->behind = new Node(plane);
-	  node->behind->addTriangle(t2_indices);
-	} else {
-	  node->behind = addTriangle(node->behind, t2_indices);
-	}
+	front.push_back(t1_indices[0]);
+	front.push_back(t1_indices[1]);
+	front.push_back(t1_indices[2]);
+
+	back.push_back(t2_indices[0]);
+	back.push_back(t2_indices[1]);
+	back.push_back(t2_indices[2]);
+	
       }
       else if (a == 1 && b == -1 && c == 1) {
 	std::array<VertexType,3> t1 = {triangle[0], ab, bc}; //front
@@ -270,20 +329,17 @@ public:
 	std::array<unsigned int, 3> t2_indices = {triangle_indices[0], bc_index ,triangle_indices[2]};
 	std::array<unsigned int, 3> t3_indices = {ab_index, triangle_indices[1], bc_index};
 
-	if (node->infront == NULL) {
-	  node->infront = new Node(plane);
-	  node->infront->addTriangle(t1_indices);
-	  node->infront->addTriangle(t2_indices);
-	} else {
-	  node->infront = addTriangle(node->infront, t1_indices);
-	  node->infront = addTriangle(node->infront, t2_indices);
-	}
-	if (node->behind == NULL) {
-	  node->behind = new Node(plane);
-	  node->behind->addTriangle(t3_indices);
-	} else {
-	  node->behind = addTriangle(node->behind, t3_indices);
-	}
+	front.push_back(t1_indices[0]);
+	front.push_back(t1_indices[1]);
+	front.push_back(t1_indices[2]);
+
+	front.push_back(t2_indices[0]);
+	front.push_back(t2_indices[1]);
+	front.push_back(t2_indices[2]);
+
+	back.push_back(t3_indices[0]);
+	back.push_back(t3_indices[1]);
+	back.push_back(t3_indices[2]);
       }
       else if (a == 1 && b == -1 && c == -1) {
 	std::array<VertexType,3> t1 = {triangle[0], ab, ca}; //front
@@ -294,20 +350,18 @@ public:
 	std::array<unsigned int, 3> t2_indices = {ab_index, triangle_indices[1], triangle_indices[2]};
 	std::array<unsigned int, 3> t3_indices = {ab_index, triangle_indices[2], ca_index};
 
-	if (node->infront == NULL) {
-	  node->infront = new Node(plane);
-	  node->infront->addTriangle(t1_indices);
-	} else {
-	  node->infront = addTriangle(node->infront, t1_indices);
-	}
-	if (node->behind == NULL) {
-	  node->behind = new Node(plane);
-	  node->behind->addTriangle(t2_indices);
-	  node->behind->addTriangle(t3_indices);
-	} else {
-	  node->behind = addTriangle(node->behind, t2_indices);
-	  node->behind = addTriangle(node->behind, t3_indices);
-	}
+	front.push_back(t1_indices[0]);
+	front.push_back(t1_indices[1]);
+	front.push_back(t1_indices[2]);
+
+	back.push_back(t2_indices[0]);
+	back.push_back(t2_indices[1]);
+	back.push_back(t2_indices[2]);
+
+	back.push_back(t3_indices[0]);
+	back.push_back(t3_indices[1]);
+	back.push_back(t3_indices[2]);
+
       }
       else if (a == -1 && b == 1 && c == 0) {
 	std::array<VertexType,3> t1 = {triangle[0], ab, triangle[2]}; //behind
@@ -316,18 +370,14 @@ public:
 	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], ab_index, triangle_indices[2]};//behind
 	std::array<unsigned int, 3> t2_indices = {ab_index, triangle_indices[1], triangle_indices[2]};//front	
 
-	if (node->infront == NULL) {
-	  node->infront = new Node(plane);
-	  node->infront->addTriangle(t2_indices);
-	} else {
-	  node->infront = addTriangle(node->infront, t2_indices);
-	}
-	if (node->behind == NULL) {
-	  node->behind = new Node(plane);
-	  node->behind->addTriangle(t1_indices);
-	} else {
-	  node->behind = addTriangle(node->behind, t1_indices);
-	}
+	front.push_back(t2_indices[0]);
+	front.push_back(t2_indices[1]);
+	front.push_back(t2_indices[2]);
+
+	back.push_back(t1_indices[0]);
+	back.push_back(t1_indices[1]);
+	back.push_back(t1_indices[2]);
+
       }
       else if (a == -1 && b == 1 && c == 1) {
 	std::array<VertexType,3> t1 = {triangle[0], ab, ca}; //behind
@@ -338,22 +388,18 @@ public:
 	std::array<unsigned int, 3> t2_indices = {ab_index, triangle_indices[1], triangle_indices[2]};
 	std::array<unsigned int, 3> t3_indices = {ab_index, triangle_indices[2], ca_index};
 
-	if (node->infront == NULL) {
-	  node->infront = new Node(plane);
-	  node->infront->addTriangle(t2_indices);
-	  node->infront->addTriangle(t3_indices);
-	} else {
-	  node->infront = addTriangle(node->infront, t2_indices);
-	  node->infront = addTriangle(node->infront, t3_indices);
-	}
-	if (node->behind == NULL) {
-	  node->behind = new Node(plane);
-	  node->behind->addTriangle(t1_indices);
-	} else {
-	  node->behind = addTriangle(node->behind, t1_indices);
-	}
-      }
+	front.push_back(t2_indices[0]);
+	front.push_back(t2_indices[1]);
+	front.push_back(t2_indices[2]);
 
+	front.push_back(t3_indices[0]);
+	front.push_back(t3_indices[1]);
+	front.push_back(t3_indices[2]);
+
+	back.push_back(t1_indices[0]);
+	back.push_back(t1_indices[1]);
+	back.push_back(t1_indices[2]);
+      }
       else if (a == -1 && b == 1 && c == -1) {
 	std::array<VertexType,3> t1 = {triangle[0], ab, triangle[2]}; //behind
 	std::array<VertexType,3> t2 = {ab, bc, triangle[2] }; // behind
@@ -363,20 +409,17 @@ public:
 	std::array<unsigned int, 3> t2_indices = {ab_index, bc_index, triangle_indices[2]};
 	std::array<unsigned int, 3> t3_indices = {ab_index, triangle_indices[1], bc_index};
 
-	if (node->infront == NULL) {
-	  node->infront = new Node(plane);
-	  node->infront->addTriangle(t3_indices);
-	} else {
-	  node->infront = addTriangle(node->infront, t3_indices);
-	}
-	if (node->behind == NULL) {
-	  node->behind = new Node(plane);
-	  node->behind->addTriangle(t1_indices);
-	  node->behind->addTriangle(t2_indices);
-	} else {
-	  node->behind = addTriangle(node->behind, t1_indices);
-	  node->behind = addTriangle(node->behind, t2_indices);
-	}
+	front.push_back(t3_indices[0]);
+	front.push_back(t3_indices[1]);
+	front.push_back(t3_indices[2]);
+
+	back.push_back(t1_indices[0]);
+	back.push_back(t1_indices[1]);
+	back.push_back(t1_indices[2]);
+
+	back.push_back(t2_indices[0]);
+	back.push_back(t2_indices[1]);
+	back.push_back(t2_indices[2]);
       }
       else if (a == 0 && b == -1 && c == 1) {
 	std::array<VertexType,3> t1 = {triangle[0], triangle[1], bc}; //behind
@@ -385,18 +428,13 @@ public:
 	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], triangle_indices[1], bc_index};//behind
 	std::array<unsigned int, 3> t2_indices = {triangle_indices[0], bc_index, triangle_indices[2]};//front
 
-	if (node->infront == NULL) {
-	  node->infront = new Node(plane);
-	  node->infront->addTriangle(t2_indices);
-	} else {
-	  node->infront = addTriangle(node->infront, t2_indices);
-	}
-	if (node->behind == NULL) {
-	  node->behind = new Node(plane);
-	  node->behind->addTriangle(t1_indices);
-	} else {
-	  node->behind = addTriangle(node->behind, t1_indices);
-	}
+	front.push_back(t2_indices[0]);
+	front.push_back(t2_indices[1]);
+	front.push_back(t2_indices[2]);
+
+	back.push_back(t1_indices[0]);
+	back.push_back(t1_indices[1]);
+	back.push_back(t1_indices[2]);
       }
       else if (a == 0 && b == 1 && c == -1) {
 	std::array<VertexType,3> t1 = {triangle[0], triangle[1], bc}; //front
@@ -405,20 +443,14 @@ public:
 	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], triangle_indices[1], bc_index};//front
 	std::array<unsigned int, 3> t2_indices = {triangle_indices[0], bc_index, triangle_indices[2]};//behind
 
-	if (node->infront == NULL) {
-	  node->infront = new Node(plane);
-	  node->infront->addTriangle(t1_indices);
-	} else {
-	  node->infront = addTriangle(node->infront, t1_indices);
-	}
-	if (node->behind == NULL) {
-	  node->behind = new Node(plane);
-	  node->behind->addTriangle(t2_indices);
-	} else {
-	  node->behind = addTriangle(node->behind, t2_indices);
-	}
-      }
-      
+	front.push_back(t1_indices[0]);
+	front.push_back(t1_indices[1]);
+	front.push_back(t1_indices[2]);
+
+	back.push_back(t2_indices[0]);
+	back.push_back(t2_indices[1]);
+	back.push_back(t2_indices[2]);
+      }      
       else if (a == -1 && b == 0 && c == 1) {
 	std::array<VertexType,3> t1 = {triangle[0], triangle[1], ca};// behind
 	std::array<VertexType,3> t2 = {triangle[1], triangle[2], ca};// front
@@ -426,20 +458,14 @@ public:
 	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], triangle_indices[1], ca_index};//behind
 	std::array<unsigned int, 3> t2_indices = {triangle_indices[1], triangle_indices[2], ca_index};//front
 
-	if (node->infront == NULL) {
-	  node->infront = new Node(plane);
-	  node->infront->addTriangle(t2_indices);
-	} else {
-	  node->infront = addTriangle(node->infront, t2_indices);
-	}
-	if (node->behind == NULL) {
-	  node->behind = new Node(plane);
-	  node->behind->addTriangle(t1_indices);
-	} else {
-	  node->behind = addTriangle(node->behind, t1_indices);
-	}
-      }
+	front.push_back(t2_indices[0]);
+	front.push_back(t2_indices[1]);
+	front.push_back(t2_indices[2]);
 
+	back.push_back(t1_indices[0]);
+	back.push_back(t1_indices[1]);
+	back.push_back(t1_indices[2]);
+      }
       else if (a == 1 && b == 0 && c == -1) {
 	std::array<VertexType,3> t1 = {triangle[0], triangle[1], ca};// front
 	std::array<VertexType,3> t2 = {triangle[1], triangle[2], ca};// behind
@@ -447,20 +473,14 @@ public:
 	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], triangle_indices[1], ca_index};
 	std::array<unsigned int, 3> t2_indices = {triangle_indices[1], triangle_indices[2], ca_index};
 
-	if (node->infront == NULL) {
-	  node->infront = new Node(plane);
-	  node->infront->addTriangle(t1_indices);
-	} else {
-	  node->infront = addTriangle(node->infront, t1_indices);
-	}
-	if (node->behind == NULL) {
-	  node->behind = new Node(plane);
-	  node->behind->addTriangle(t2_indices);
-	} else {
-	  node->behind = addTriangle(node->behind, t2_indices);
-	}
-      }
+	front.push_back(t1_indices[0]);
+	front.push_back(t1_indices[1]);
+	front.push_back(t1_indices[2]);
 
+	back.push_back(t2_indices[0]);
+	back.push_back(t2_indices[1]);
+	back.push_back(t2_indices[2]);
+      }
       else if (a == 1 && b == 1 && c == -1) {
 	std::array<VertexType,3> t1 = {triangle[0], triangle[1], ca}; //front
 	std::array<VertexType,3> t2 = {ca, triangle[1], bc }; // front
@@ -470,20 +490,17 @@ public:
 	std::array<unsigned int, 3> t2_indices = {ca_index, triangle_indices[1], bc_index};
 	std::array<unsigned int, 3> t3_indices = {ca_index, bc_index, triangle_indices[2]};
 
-	if (node->infront == NULL) {
-	  node->infront = new Node(plane);
-	  node->infront->addTriangle(t1_indices);
-	  node->infront->addTriangle(t2_indices);
-	} else {
-	  node->infront = addTriangle(node->infront, t1_indices);
-	  node->infront = addTriangle(node->infront, t2_indices);
-	}
-	if (node->behind == NULL) {
-	  node->behind = new Node(plane);
-	  node->behind->addTriangle(t3_indices);
-	} else {
-	  node->behind = addTriangle(node->behind, t3_indices);
-	}
+	front.push_back(t1_indices[0]);
+	front.push_back(t1_indices[1]);
+	front.push_back(t1_indices[2]);
+
+	front.push_back(t2_indices[0]);
+	front.push_back(t2_indices[1]);
+	front.push_back(t2_indices[2]);
+
+	back.push_back(t3_indices[0]);
+	back.push_back(t3_indices[1]);
+	back.push_back(t3_indices[2]);
       }
       else if (a == -1 && b == -1 && c == 1) {
 	std::array<VertexType,3> t1 = {triangle[0], triangle[1], bc}; //behind
@@ -494,29 +511,25 @@ public:
 	std::array<unsigned int, 3> t2_indices = {triangle_indices[0], bc_index, ca_index};
 	std::array<unsigned int, 3> t3_indices = {ca_index, bc_index, triangle_indices[2]};
 
-	if (node->behind == NULL) {
-	  node->behind = new Node(plane);
-	  node->behind->addTriangle(t1_indices);
-	  node->behind->addTriangle(t2_indices);
-	} else {
-	  node->behind = addTriangle(node->behind, t1_indices);
-	  node->behind = addTriangle(node->behind, t2_indices);
-	}
-	if (node->infront == NULL) {
-	  node->infront = new Node(plane);
-	  node->infront->addTriangle(t3_indices);
-	} else {
-	  node->infront = addTriangle(node->infront, t3_indices);
-	}
-      }
+	front.push_back(t3_indices[0]);
+	front.push_back(t3_indices[1]);
+	front.push_back(t3_indices[2]);
 
+	back.push_back(t1_indices[0]);
+	back.push_back(t1_indices[1]);
+	back.push_back(t1_indices[2]);
+
+	back.push_back(t2_indices[0]);
+	back.push_back(t2_indices[1]);
+	back.push_back(t2_indices[2]);
+      }
       else {
 	cout << "yekyahua\n";
       }      
-      return node;
-    }
-  }
 
+    }
+    
+  }
 
 Node* addTriangleWhile(Node* inode, std::array<unsigned int, 3> itriangle_indices) {
     
@@ -887,6 +900,358 @@ Node* addTriangleWhile(Node* inode, std::array<unsigned int, 3> itriangle_indice
   return inode;
   }
 
+  Node* addTriangle(Node* node, std::array<unsigned int, 3> triangle_indices) {
+    
+
+    cout << "adding triangle\n";
+    
+    std::array<VertexType, 3> triangle = {vertices[triangle_indices[0]], vertices[triangle_indices[1]], vertices[triangle_indices[2]]};    
+
+    
+    for (auto v: triangle) {
+      auto p = v.getData("position");
+      cout << pp <<" :(" << p[0] << "," << p[1] << "," << p[2] << ")";
+      pp += 1;
+    }
+    
+
+    int a = vertex_orientation_wrt_plane(triangle[0], node->plane);
+    int b = vertex_orientation_wrt_plane(triangle[1], node->plane);
+    int c = vertex_orientation_wrt_plane(triangle[2], node->plane); 
+
+    VertexType ab;
+    VertexType bc;
+    VertexType ca;
+    unsigned int ab_index;
+    unsigned int bc_index;
+    unsigned int ca_index;
+
+    //    cout << "abc: " << a << "," << b << "," << c << "\n";
+    
+    if(a*b == -1) {
+      //throw runtime_error("ab less than one\n");
+      ab = findIntersection(node->plane, triangle[0], triangle[1]);
+      vertices.push_back(ab);
+      ab_index = vertices.size() - 1;
+    }
+    if(b*c == -1) {
+      //throw runtime_error("bc less than one\n");
+      bc = findIntersection(node->plane, triangle[1], triangle[2]);
+      vertices.push_back(bc);
+      bc_index = vertices.size() - 1;
+    }
+    if(c*a == -1) {
+      //throw runtime_error("ca less than one\n");
+      ca = findIntersection(node->plane, triangle[2], triangle[0]);
+      vertices.push_back(ca);
+      ca_index = vertices.size() - 1;
+    }
+    
+    if(a == 0 && b == 0 && c == 0) {
+      node->addTriangle(triangle_indices);
+      return node;
+    }
+    
+    else if ((a <= 0 && b <=0 && c <= 0)) {
+      if (node->behind == NULL) {
+	std::array<float,4> plane = calculate_plane_from_points(triangle);
+	node->behind = new Node(plane);
+	node->behind->addTriangle(triangle_indices);
+      } else {
+	//	cout << "calling now\n";
+	node->behind = addTriangle(node->behind, triangle_indices);
+      }
+      return node;
+    }
+    else if (a >= 0 && b >= 0 && c >= 0) {
+      if (node->infront == NULL) {
+	std::array<float,4> plane = calculate_plane_from_points(triangle);
+	node->infront = new Node(plane);
+	node->infront->addTriangle(triangle_indices);
+      } else {
+	node->infront = addTriangle(node->infront, triangle_indices);
+      }
+      return node;
+    }
+    // 12 splitting cases here
+    else {
+      std::array<float,4> plane = calculate_plane_from_points(triangle);
+
+      if (a == 1 && b == -1 && c == 0) {
+	std::array<VertexType,3> t1 = {triangle[0], ab, triangle[2]};//front
+	std::array<VertexType,3> t2 = {ab, triangle[1], triangle[2]};//behind
+
+	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], ab_index, triangle_indices[2]};
+	std::array<unsigned int, 3> t2_indices = {ab_index, triangle_indices[1], triangle_indices[2]};
+
+	if (node->infront == NULL) {
+	  node->infront = new Node(plane);
+	  node->infront->addTriangle(t1_indices);
+	} else {
+	  node->infront = addTriangle(node->infront, t1_indices);
+	}
+	if (node->behind == NULL) {
+	  node->behind = new Node(plane);
+	  node->behind->addTriangle(t2_indices);
+	} else {
+	  node->behind = addTriangle(node->behind, t2_indices);
+	}
+      }
+      else if (a == 1 && b == -1 && c == 1) {
+	std::array<VertexType,3> t1 = {triangle[0], ab, bc}; //front
+	std::array<VertexType,3> t2 = {triangle[0], bc, triangle[2]}; // front
+	std::array<VertexType,3> t3 = {ab, triangle[1], bc}; //behind
+	
+	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], ab_index, bc_index};
+	std::array<unsigned int, 3> t2_indices = {triangle_indices[0], bc_index ,triangle_indices[2]};
+	std::array<unsigned int, 3> t3_indices = {ab_index, triangle_indices[1], bc_index};
+
+	if (node->infront == NULL) {
+	  node->infront = new Node(plane);
+	  node->infront->addTriangle(t1_indices);
+	  node->infront->addTriangle(t2_indices);
+	} else {
+	  node->infront = addTriangle(node->infront, t1_indices);
+	  node->infront = addTriangle(node->infront, t2_indices);
+	}
+	if (node->behind == NULL) {
+	  node->behind = new Node(plane);
+	  node->behind->addTriangle(t3_indices);
+	} else {
+	  node->behind = addTriangle(node->behind, t3_indices);
+	}
+      }
+      else if (a == 1 && b == -1 && c == -1) {
+	std::array<VertexType,3> t1 = {triangle[0], ab, ca}; //front
+	std::array<VertexType,3> t2 = {ab, triangle[1], triangle[2] }; // behind
+	std::array<VertexType,3> t3 = {ab, triangle[2], ca}; //behind
+	
+	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], ab_index, ca_index};
+	std::array<unsigned int, 3> t2_indices = {ab_index, triangle_indices[1], triangle_indices[2]};
+	std::array<unsigned int, 3> t3_indices = {ab_index, triangle_indices[2], ca_index};
+
+	if (node->infront == NULL) {
+	  node->infront = new Node(plane);
+	  node->infront->addTriangle(t1_indices);
+	} else {
+	  node->infront = addTriangle(node->infront, t1_indices);
+	}
+	if (node->behind == NULL) {
+	  node->behind = new Node(plane);
+	  node->behind->addTriangle(t2_indices);
+	  node->behind->addTriangle(t3_indices);
+	} else {
+	  node->behind = addTriangle(node->behind, t2_indices);
+	  node->behind = addTriangle(node->behind, t3_indices);
+	}
+      }
+      else if (a == -1 && b == 1 && c == 0) {
+	std::array<VertexType,3> t1 = {triangle[0], ab, triangle[2]}; //behind
+	std::array<VertexType,3> t2 = {ab, triangle[1], triangle[2]}; //front
+	
+	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], ab_index, triangle_indices[2]};//behind
+	std::array<unsigned int, 3> t2_indices = {ab_index, triangle_indices[1], triangle_indices[2]};//front	
+
+	if (node->infront == NULL) {
+	  node->infront = new Node(plane);
+	  node->infront->addTriangle(t2_indices);
+	} else {
+	  node->infront = addTriangle(node->infront, t2_indices);
+	}
+	if (node->behind == NULL) {
+	  node->behind = new Node(plane);
+	  node->behind->addTriangle(t1_indices);
+	} else {
+	  node->behind = addTriangle(node->behind, t1_indices);
+	}
+      }
+      else if (a == -1 && b == 1 && c == 1) {
+	std::array<VertexType,3> t1 = {triangle[0], ab, ca}; //behind
+	std::array<VertexType,3> t2 = {ab, triangle[1], triangle[2] }; //front
+	std::array<VertexType,3> t3 = {ab, triangle[2], ca}; //front
+	
+	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], ab_index, ca_index};
+	std::array<unsigned int, 3> t2_indices = {ab_index, triangle_indices[1], triangle_indices[2]};
+	std::array<unsigned int, 3> t3_indices = {ab_index, triangle_indices[2], ca_index};
+
+	if (node->infront == NULL) {
+	  node->infront = new Node(plane);
+	  node->infront->addTriangle(t2_indices);
+	  node->infront->addTriangle(t3_indices);
+	} else {
+	  node->infront = addTriangle(node->infront, t2_indices);
+	  node->infront = addTriangle(node->infront, t3_indices);
+	}
+	if (node->behind == NULL) {
+	  node->behind = new Node(plane);
+	  node->behind->addTriangle(t1_indices);
+	} else {
+	  node->behind = addTriangle(node->behind, t1_indices);
+	}
+      }
+
+      else if (a == -1 && b == 1 && c == -1) {
+	std::array<VertexType,3> t1 = {triangle[0], ab, triangle[2]}; //behind
+	std::array<VertexType,3> t2 = {ab, bc, triangle[2] }; // behind
+	std::array<VertexType,3> t3 = {ab, triangle[1], bc}; //front
+	
+	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], ab_index, triangle_indices[2]};
+	std::array<unsigned int, 3> t2_indices = {ab_index, bc_index, triangle_indices[2]};
+	std::array<unsigned int, 3> t3_indices = {ab_index, triangle_indices[1], bc_index};
+
+	if (node->infront == NULL) {
+	  node->infront = new Node(plane);
+	  node->infront->addTriangle(t3_indices);
+	} else {
+	  node->infront = addTriangle(node->infront, t3_indices);
+	}
+	if (node->behind == NULL) {
+	  node->behind = new Node(plane);
+	  node->behind->addTriangle(t1_indices);
+	  node->behind->addTriangle(t2_indices);
+	} else {
+	  node->behind = addTriangle(node->behind, t1_indices);
+	  node->behind = addTriangle(node->behind, t2_indices);
+	}
+      }
+      else if (a == 0 && b == -1 && c == 1) {
+	std::array<VertexType,3> t1 = {triangle[0], triangle[1], bc}; //behind
+	std::array<VertexType,3> t2 = {triangle[0], bc, triangle[2]}; //front
+
+	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], triangle_indices[1], bc_index};//behind
+	std::array<unsigned int, 3> t2_indices = {triangle_indices[0], bc_index, triangle_indices[2]};//front
+
+	if (node->infront == NULL) {
+	  node->infront = new Node(plane);
+	  node->infront->addTriangle(t2_indices);
+	} else {
+	  node->infront = addTriangle(node->infront, t2_indices);
+	}
+	if (node->behind == NULL) {
+	  node->behind = new Node(plane);
+	  node->behind->addTriangle(t1_indices);
+	} else {
+	  node->behind = addTriangle(node->behind, t1_indices);
+	}
+      }
+      else if (a == 0 && b == 1 && c == -1) {
+	std::array<VertexType,3> t1 = {triangle[0], triangle[1], bc}; //front
+	std::array<VertexType,3> t2 = {triangle[0], bc, triangle[2]}; //behind
+	
+	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], triangle_indices[1], bc_index};//front
+	std::array<unsigned int, 3> t2_indices = {triangle_indices[0], bc_index, triangle_indices[2]};//behind
+
+	if (node->infront == NULL) {
+	  node->infront = new Node(plane);
+	  node->infront->addTriangle(t1_indices);
+	} else {
+	  node->infront = addTriangle(node->infront, t1_indices);
+	}
+	if (node->behind == NULL) {
+	  node->behind = new Node(plane);
+	  node->behind->addTriangle(t2_indices);
+	} else {
+	  node->behind = addTriangle(node->behind, t2_indices);
+	}
+      }
+      
+      else if (a == -1 && b == 0 && c == 1) {
+	std::array<VertexType,3> t1 = {triangle[0], triangle[1], ca};// behind
+	std::array<VertexType,3> t2 = {triangle[1], triangle[2], ca};// front
+
+	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], triangle_indices[1], ca_index};//behind
+	std::array<unsigned int, 3> t2_indices = {triangle_indices[1], triangle_indices[2], ca_index};//front
+
+	if (node->infront == NULL) {
+	  node->infront = new Node(plane);
+	  node->infront->addTriangle(t2_indices);
+	} else {
+	  node->infront = addTriangle(node->infront, t2_indices);
+	}
+	if (node->behind == NULL) {
+	  node->behind = new Node(plane);
+	  node->behind->addTriangle(t1_indices);
+	} else {
+	  node->behind = addTriangle(node->behind, t1_indices);
+	}
+      }
+
+      else if (a == 1 && b == 0 && c == -1) {
+	std::array<VertexType,3> t1 = {triangle[0], triangle[1], ca};// front
+	std::array<VertexType,3> t2 = {triangle[1], triangle[2], ca};// behind
+	
+	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], triangle_indices[1], ca_index};
+	std::array<unsigned int, 3> t2_indices = {triangle_indices[1], triangle_indices[2], ca_index};
+
+	if (node->infront == NULL) {
+	  node->infront = new Node(plane);
+	  node->infront->addTriangle(t1_indices);
+	} else {
+	  node->infront = addTriangle(node->infront, t1_indices);
+	}
+	if (node->behind == NULL) {
+	  node->behind = new Node(plane);
+	  node->behind->addTriangle(t2_indices);
+	} else {
+	  node->behind = addTriangle(node->behind, t2_indices);
+	}
+      }
+
+      else if (a == 1 && b == 1 && c == -1) {
+	std::array<VertexType,3> t1 = {triangle[0], triangle[1], ca}; //front
+	std::array<VertexType,3> t2 = {ca, triangle[1], bc }; // front
+	std::array<VertexType,3> t3 = {ca, bc, triangle[2]}; //behind
+	
+	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], triangle_indices[1], ca_index};
+	std::array<unsigned int, 3> t2_indices = {ca_index, triangle_indices[1], bc_index};
+	std::array<unsigned int, 3> t3_indices = {ca_index, bc_index, triangle_indices[2]};
+
+	if (node->infront == NULL) {
+	  node->infront = new Node(plane);
+	  node->infront->addTriangle(t1_indices);
+	  node->infront->addTriangle(t2_indices);
+	} else {
+	  node->infront = addTriangle(node->infront, t1_indices);
+	  node->infront = addTriangle(node->infront, t2_indices);
+	}
+	if (node->behind == NULL) {
+	  node->behind = new Node(plane);
+	  node->behind->addTriangle(t3_indices);
+	} else {
+	  node->behind = addTriangle(node->behind, t3_indices);
+	}
+      }
+      else if (a == -1 && b == -1 && c == 1) {
+	std::array<VertexType,3> t1 = {triangle[0], triangle[1], bc}; //behind
+	std::array<VertexType,3> t2 = {triangle[0], bc, ca }; // behind
+	std::array<VertexType,3> t3 = {ca, bc, triangle[2]}; // front
+	
+	std::array<unsigned int, 3> t1_indices = {triangle_indices[0], triangle_indices[1], bc_index};
+	std::array<unsigned int, 3> t2_indices = {triangle_indices[0], bc_index, ca_index};
+	std::array<unsigned int, 3> t3_indices = {ca_index, bc_index, triangle_indices[2]};
+
+	if (node->behind == NULL) {
+	  node->behind = new Node(plane);
+	  node->behind->addTriangle(t1_indices);
+	  node->behind->addTriangle(t2_indices);
+	} else {
+	  node->behind = addTriangle(node->behind, t1_indices);
+	  node->behind = addTriangle(node->behind, t2_indices);
+	}
+	if (node->infront == NULL) {
+	  node->infront = new Node(plane);
+	  node->infront->addTriangle(t3_indices);
+	} else {
+	  node->infront = addTriangle(node->infront, t3_indices);
+	}
+      }
+
+      else {
+	cout << "yekyahua\n";
+      }      
+      return node;
+    }
+  }
   
   std::vector<unsigned int> getFrontMesh(Node* node, std::vector<VertexType>& vertices, const std::vector<unsigned int> triangle_indices) {
 
@@ -1628,7 +1993,7 @@ Node* addTriangleWhile(Node* inode, std::array<unsigned int, 3> itriangle_indice
     
   }//getFrontMeshWhile ends here
   
-	
+  // clip a to b	
   Node* clip(Node* a, Node* b, std::vector<VertexType>& a_vertices) {
     
     Node *newnode = new Node(a->plane);
