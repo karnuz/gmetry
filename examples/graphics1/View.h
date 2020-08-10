@@ -9,6 +9,7 @@ using namespace std;
 #include "ShaderLocationsVault.h"
 #include <ObjectInstance.h>
 #include "VertexAttrib.h"
+#include "Scenegraph.h"
 
 /*
  * This class encapsulates all our program-specific details. This makes our
@@ -28,11 +29,13 @@ public:
      * constructor!)
      */
     void init(util::OpenGLFunctions& e);
-
+    void init_a(util::OpenGLFunctions& e);
+    void init_b(util::OpenGLFunctions& e);
     /*
      * This function is called whenever the window is to be redrawn
      */
     void draw(util::OpenGLFunctions& e);
+    void draw_a(util::OpenGLFunctions& e);
 
     /*
      * This function is called whenever the window is reshaped
@@ -44,19 +47,31 @@ public:
      */
     void dispose(util::OpenGLFunctions& gl);
 
+  void trackball(glm::vec2 delta);
+  void key_callback(char input);
+  
 private:
   //record the current window width and height
   int WINDOW_WIDTH,WINDOW_HEIGHT;
   //the projection matrix
   glm::mat4 proj;
+  //the modelview matrix
+  glm::mat4 modelview;
   //the object which we are rendering
   util::ObjectInstance *obj;
+  util::ObjectInstance *obj2;
   //the list of shader variables and their locations within the shader program
   util::ShaderLocationsVault shaderLocations;
   //the color of our object
   glm::vec4 color;
   //the GLSL shader
   util::ShaderProgram program;
+  //trackball transform
+  glm::mat4 trackballtransform;
+  //Scenegraph
+  Scenegraph<VertexAttrib>* s;
+  //ScenegraphRenderer
+  ScenegraphRenderer<VertexAttrib>* sr;
 };
 
 #endif // VIEW_H

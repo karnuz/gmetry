@@ -48,7 +48,7 @@ $(TEST_OBJDIR): $(OBJDIR)
 	mkdir $@
 
 $(TEST_OBJDIR)/%: $(TEST_OBJDIR)/%.o
-	$(CXX) -g -o $@ $< $(TEST_LDFLAGS)
+	$(CXX) -g -O0 -o $@ $< $(TEST_LDFLAGS)
 
 $(TEST_OBJDIR)/%.o: $(TESTDIR)/%.cpp $(OBJDIR)
 	$(CXX) -D_DEBUG -g -O0 -I$(SRCDIR) -I./ -c -o $@ $<
@@ -62,7 +62,7 @@ egs: $(EXAMPLEOBJDIR) $(EXAMPLES_BINS)
 $(EXAMPLES_BINS): $(EXAMPLES_OBJS)
 
 $(EXAMPLEOBJDIR)/%: $(EXAMPLEOBJDIR)/%.o
-	$(CXX) -g -o $@ $< $(EXAMPLES_LDFLAGS)
+	$(CXX) -g -O0 -o $@ $< $(EXAMPLES_LDFLAGS)
 
 $(EXAMPLEOBJDIR)/%.o: $(EXAMPLEDIR)/%.cpp
 	$(CXX) -D_DEBUG -g -O0 -I$(SRCDIR) -I./ -c -o $@ $<

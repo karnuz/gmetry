@@ -136,6 +136,18 @@ public:
     ::glClear(mask);
   }
 
+
+  void glUniform1f(GLint location,
+		   GLfloat v0) {
+    ::glUniform1f(location, v0);
+  }
+  
+  void glUniform3fv(GLint location,
+		    GLsizei count,
+		    const GLfloat *value) {
+    ::glUniform3fv(location, count, value);
+  }
+
   void glUniform4fv(GLint location,
 		    GLsizei count,
 		    const GLfloat *value) {
@@ -222,7 +234,10 @@ public:
   }
 
 
-
+  void glPolygonMode(GLenum face,
+		     GLenum mode) {
+    ::glPolygonMode(face,mode);
+  }
 
 
 

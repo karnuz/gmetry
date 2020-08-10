@@ -325,30 +325,36 @@ public:
 				data.push_back(texcoords[i].z);
 				data.push_back(texcoords[i].w);
 				v.setData("texcoord",data);
-			}    
-            if (normals.size()==vertices.size())
-			{
-				data.clear();
-				data.push_back(normals[i].x);
-				data.push_back(normals[i].y);
-				data.push_back(normals[i].z);
-				data.push_back(normals[i].w);
-				v.setData("normal",data);
 			}
-
+            if (normals.size()==vertices.size())
+	      {
+		data.clear();
+		data.push_back(normals[i].x);
+		data.push_back(normals[i].y);
+		data.push_back(normals[i].z);
+		data.push_back(normals[i].w);
+		v.setData("normal",data);
+	      }
+	    
             vertexData.push_back(v);
         }
 
-        if ((normals.size()==0) || (normals.size()!=vertices.size()))
-            mesh.computeNormals();
 
         mesh.setVertexData(vertexData);
         mesh.setPrimitives(triangles);
         mesh.setPrimitiveType(GL_TRIANGLES);
         mesh.setPrimitiveSize(3);
-        return mesh;
+
+        if ((normals.size()==0) || (normals.size()!=vertices.size())) {
+	  //cout << "computing normalsss\n";
+	  //throw runtime_error("computing normals\n");
+	  mesh.computeNormals();
+	}
+
+	return mesh;
     }
 };
 }
 
 #endif
+

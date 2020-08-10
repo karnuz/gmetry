@@ -115,12 +115,12 @@ public:
 	  }
       }
     if (program >= 0) {
-      cout << program << "\n";
-      cout << "here\n";
+      //      cout << program << "\n";
+      //cout << "here\n";
       gl.glDeleteProgram(program);
     }
     program = 0;
-    cout << "hereee\n";
+    //cout << "hereee\n";
   }
   
   /*
@@ -221,7 +221,6 @@ private:
 
     program = gl.glCreateProgram();
 
-    cout << "program createddddddddddd\n";
     for (int i=0;i<2;i++)
       {
 	file.open(shaders[i].filename.c_str());

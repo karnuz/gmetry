@@ -7,6 +7,7 @@
 
 #include "drawutils.h"
 #include <vector>
+//#include "OpenGLFunctions.h"
 using namespace std;
 
 
@@ -132,6 +133,7 @@ private:
   ConvexHull<float> c;
   vector<Point2D<float>> hull;
   GLScene s;
+  //  OpenGLFunctions glf;
 
 public:
 
@@ -163,6 +165,7 @@ public:
 
   void test_Incremental() {
 
+    
     srand(time(0));
     int N = 200;
     vector<float> vecOfRandomNums(N);
@@ -208,8 +211,8 @@ public:
 
 int main(int argc, char** argv) {
 
-  test_doesIntersect();
-  test_sortPolar();
+  //test_doesIntersect();
+  //test_sortPolar();
   //  test_grahamScan2();
 
   TestIncremental t;

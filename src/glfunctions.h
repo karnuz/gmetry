@@ -1,3 +1,6 @@
+#ifndef _GLFUNCTIONS_H_
+#define _GLFUNCTIONS_H_
+
 #include <iostream>
 #include <cassert>
 #include <math.h> 
@@ -185,6 +188,7 @@ public:
       "  frag_colour = vec4(0.9, 0.0, 0.0, 1.0);"
       "}";
     
+    shader_programme = glCreateProgram();
 
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vs, 1, &vertex_shader, NULL);
@@ -194,7 +198,6 @@ public:
     glCompileShader(fs);
     
     
-    shader_programme = glCreateProgram();
     glAttachShader(shader_programme, fs);
     glAttachShader(shader_programme, vs);
     glLinkProgram(shader_programme);
@@ -357,13 +360,11 @@ public:
 
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     
-  }
-  
-
-  
-  
+  }  
 };
 
+
+#endif
 
 /*
 

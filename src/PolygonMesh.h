@@ -73,6 +73,7 @@ public:
      * Compute the bounding box of this polygon mesh, if there is position data
      */
     void computeBoundingBox();
+  PolygonMesh<VertexType> getTransformedMesh(glm::mat4 transform);
 
 
 
@@ -246,7 +247,11 @@ void PolygonMesh<VertexType>::computeBoundingBox()
 template<class VertexType>
 void PolygonMesh<VertexType>::computeNormals()
 {
+  std::cout << "bool: ";
     int i,j,k;
+
+    cout << "iska kya" << vertexData.size() << "ho gaya\n";
+    cout << vertexData[0].hasData("position") << "," << vertexData[0].hasData("normal") << "\n";
 
     if (vertexData.size()<=0)
         return;
@@ -256,12 +261,13 @@ void PolygonMesh<VertexType>::computeNormals()
         return;
     }
 
-    if (!vertexData[0].hasData("normal"))
-        return;
+    //    if (!vertexData[0].hasData("normal"))
+    //    return;
 
     vector<glm::vec4> positions;
 
-    for (i=0;i<positions.size();i++) {
+    
+    for (i=0;i<vertexData.size();i++) {
         vector<float> data = vertexData[i].getData("position");
         glm::vec4 pos;
         switch (data.size()) {
@@ -279,6 +285,7 @@ void PolygonMesh<VertexType>::computeNormals()
         normals.push_back(glm::vec4(0.0f,0.0f,0.0f,0.0f));
     }
 
+    cout << "sizes:" << primitives.size() << "," << primitiveSize << "\n";
     for (i=0;i<primitives.size();i+=primitiveSize)
     {
         glm::vec4 norm = glm::vec4(0.0f,0.0f,0.0f,0.0f);
@@ -286,24 +293,40 @@ void PolygonMesh<VertexType>::computeNormals()
 
 
         //compute the normal of this triangle
-        vector<unsigned int>v;
+        vector<unsigned int> v;
 
         for (k=0;k<primitiveSize;k++)
         {
-            v.push_back(primitives[i+k]);
+	      
+	  v.push_back(primitives[i+k]);
+
         }
 
         //the newell's method to calculate normal
 
         for (k=0;k<primitiveSize;k++)
         {
-            norm.x += (positions[v[k]].y-positions[v[(k+1)%primitiveSize]].y)*
-                      (positions[v[k]].z+positions[v[(k+1)%primitiveSize]].z);
-            norm.y += (positions[v[k]].z-positions[v[(k+1)%primitiveSize]].z)*
-                      (positions[v[k]].x+positions[v[(k+1)%primitiveSize]].x);
-            norm.z += (positions[v[k]].x-positions[v[(k+1)%primitiveSize]].x)*
-                      (positions[v[k]].y+positions[v[(k+1)%primitiveSize]].y);
+
+	  /*
+	  cout << "this: ";
+	  cout << v[k] << "\n";
+	  cout << positions.size() << "\n";
+	  auto aa = positions[v[k]];
+	  cout << "suno\n";
+	  cout << "idhar aaya kya: " << aa[0] <<  "\n" ;
+	  */
+	  
+            norm[0] += (positions[v[k]][1]-positions[v[(k+1)%primitiveSize]][1])*
+                      (positions[v[k]][2]+positions[v[(k+1)%primitiveSize]][2]);
+
+	    
+            norm[1] += (positions[v[k]][2]-positions[v[(k+1)%primitiveSize]][2])*
+                      (positions[v[k]][0]+positions[v[(k+1)%primitiveSize]][0]);
+
+	    norm[2] += (positions[v[k]][0]-positions[v[(k+1)%primitiveSize]][0])*
+                      (positions[v[k]][1]+positions[v[(k+1)%primitiveSize]][1]);
         }
+	//	cout << "computing normals" << norm[0] << "," << norm[1] << "," << norm[2] << "\n";
         norm = glm::normalize(norm);
 
         for (k=0;k<primitiveSize;k++)
@@ -311,6 +334,7 @@ void PolygonMesh<VertexType>::computeNormals()
             normals[v[k]] = normals[v[k]] + norm;
         }
     }
+
 
     for (i=0;i<normals.size();i++)
     {
@@ -327,5 +351,20 @@ void PolygonMesh<VertexType>::computeNormals()
         vertexData[i].setData("normal",n);
     }
 }
+
+template<class VertexType>
+PolygonMesh<VertexType> PolygonMesh<VertexType>::getTransformedMesh(glm::mat4 transform) {
+  PolygonMesh<VertexType> result = *(new PolygonMesh<VertexType>());
+  
+  result.primitives = primitives;
+  result.primitiveType = primitiveType;
+  result.primitiveSize = primitiveSize;
+  result.vertexData = vertexData;
+  for(auto& v : result.vertexData) {
+    v.transform(transform);
+  }
+  return result;
+}
+
 }
 #endif

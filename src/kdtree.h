@@ -277,6 +277,8 @@ public:
     int level = 0;
     
     //cout << bestNode->GetData();
+
+    // the third value represents if the node was added unconditionally ( one side unexplored, or conditionally
     vector<tuple<Node<T> *, int, int>> st;
     st.push_back(tuple(ptr,level,0));
 
@@ -334,9 +336,10 @@ public:
       T ndata = ptr->GetData();
       double d = (double) dist(data, ndata);
 
+      // if it was a normal push
       if(cond == 0) {
 
-	nnv += 1;
+	//	nnv += 1;
 	if (d < bestDist) {
 	  bestDist = d;
 	  bestNode = ptr;
@@ -354,7 +357,7 @@ public:
 	}
 	else {
 	  if(abs(data[split_idx] - ndata[split_idx]) < bestDist && ptr->IsLeft() && cond == 0) {
-	  st.push_back(tuple(ptr,level,1));
+	    st.push_back(tuple(ptr,level,1));
 	  }
 	  if(ptr->IsRight() && k > N && cond == 0) {
 	    st.push_back(tuple(ptr->GetRight(), level+1,0));

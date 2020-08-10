@@ -6,6 +6,7 @@
 #include "VertexAttrib.h"
 #include <map>
 #include "ShaderProgram_him.h"
+#include "bspTree.h"
 
 //#include "ObjectInstance.h"
 
@@ -19,17 +20,22 @@ int main() {
 
   glfw.draw();
 
+  
+  //  ifstream in_file;
+  //in_file.open("/Users/himanshusharma/karnuz/AlgoDS/geometry/models/cone.obj");
+
+  //  PolygonMesh<VertexAttrib> mesh;
+  //ObjImporter<VertexAttrib> obj;
+  //mesh = obj.importFile(in_file, true);
+
+  //mesh.setPrimitiveType(GL_TRIANGLES);
+  //mesh.setPrimitiveSize(3);
+
+
+  //  BSPTree bsp(mesh);
+
   /*
-  ifstream in_file;
-  in_file.open("/Users/himanshusharma/karnuz/AlgoDS/geometry/models/cone.obj");
-
-  PolygonMesh<VertexAttrib> mesh;
-  ObjImporter<VertexAttrib> obj;
-  mesh = obj.importFile(in_file, true);
-
-  mesh.setPrimitiveType(GL_TRIANGLES);
-  mesh.setPrimitiveSize(3);
-
+  
   map<string,string> shaderVarsToVertexAttribs;
 
   shaderVarsToVertexAttribs["vPosition"]="position";

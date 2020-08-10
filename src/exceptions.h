@@ -1,4 +1,19 @@
+#ifndef _EXCEPTIONS_H_
+#define _EXCEPTIONS_H_
+
+
 #include <exception>
+
+using namespace std;
+
+class NormalZero_Exception: public std::exception
+{
+  
+  virtual const char* what() const throw()
+  {
+    return "Normal is zero.\n";
+  }
+};
 
 
 class dimension_not_handled_exception: public exception
@@ -7,7 +22,7 @@ class dimension_not_handled_exception: public exception
   {
     return "Dimension Not Handled";
   }
-} dimension_not_handled_exception;
+};
 
 class point_out_of_boundary_exception: public exception
 {
@@ -15,7 +30,7 @@ class point_out_of_boundary_exception: public exception
   {
     return "Point not in Boundary";
   }
-} point_out_of_boundary_exception;
+};
 
 class no_point_in_quad_exception: public exception
 {
@@ -23,7 +38,36 @@ class no_point_in_quad_exception: public exception
   {
     return "No Point In Quad.\n";
   }
-} no_point_in_quad_exception;
+};
+
+
+class ShaderException: public exception
+{
+  const char* error_message;
+
+public:
+  virtual const char* what() const throw()
+  {
+    return error_message;
+  }
+};
+
+
+
+class ObjImporter_Exception: public exception
+{
+  
+  virtual const char* what() const throw()
+  {
+    return "Something went wrong in ObjImporter.\n";
+  }
+};
+
+
+
+
+#endif
+
 
 /*
 class ObjImporter_Exception : public std::exception {
@@ -48,13 +92,3 @@ public:
   
 } ObjImporter_Exception;
 */
-
-
-class ObjImporter_Exception: public exception
-{
-  
-  virtual const char* what() const throw()
-  {
-    return "Something went wrong in ObjImporter.\n";
-  }
-} ObjImporter_Exception;

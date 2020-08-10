@@ -32,10 +32,15 @@ public:
 
   bool hasData(string attribName)
   {
-    if (attribName == "position")
-      {
-	return true;
-      }
+    if (attribName == "position") {
+      return hasPosition;
+    }
+    else if (attribName == "normal") {
+      return hasNormal;
+    }
+    else if (attribName == "texcoord") {
+      return hasTexcoord;
+    }
     else
       {
 	return false;
@@ -84,6 +89,7 @@ public:
     
     if (attribName == "position")
       {
+	hasPosition = true;
 	position = glm::vec4(0,0,0,1);
 	switch (data.size()) {
 	case 4: position.w = data[3];
@@ -98,6 +104,7 @@ public:
       }
     else if (attribName == "normal")
       {
+	hasNormal = true;
 	normal = glm::vec4(0,0,0,1);
 	switch (data.size()) {
 	case 4: normal.w = data[3];
@@ -112,6 +119,7 @@ public:
       }
     else if (attribName == "texcoord")
       {
+	hasTexcoord = true;
 	texcoord = glm::vec4(0,0,0,1);
 	switch (data.size()) {
 	case 4: texcoord.w = data[3];
@@ -140,11 +148,22 @@ public:
     attributes.push_back("texcoord");
     return attributes;
   }
+
+  void transform(glm::mat4 transform) {
+    position = transform*position;
+    glm::mat4 inverse = glm::inverse(transform);
+    glm::mat4 inversetranspose = glm::transpose(inverse);
+    normal = inversetranspose*normal;
+  }
   
 private:
   glm::vec4 position;
-  glm::vec4 normal;
+  glm::vec4 normal; 
   glm::vec4 texcoord;
+  bool hasPosition = false;
+  bool hasNormal = false;
+  bool hasTexcoord = false;
 };
 
 #endif
+

@@ -95,21 +95,21 @@ public:
       Point2D<double> a =  getNearestNeighborTrue(e, points);
       
       start = std::clock();
-      Point2D<double> b = getNearestNeighbor(e);
+      Point2D<double> b = getNearestNeighbor2(e);
       duration += ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 
 
       start = std::clock();
-      Point2D<double> c = getNearestNeighbor2(e);
+      Point2D<double> c = getNearestNeighbor3(e);
       duration2 += ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 
       start = std::clock();
-      Point2D<double> p = getNearestNeighborS(e);
+      Point2D<double> p = getNearestNeighbor2S(e);
       duration3 += ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 
 
       start = std::clock();
-      Point2D<double> q = getNearestNeighbor2S(e);
+      Point2D<double> q = getNearestNeighbor3S(e);
       duration4 += ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 
       //cout << "searching: " << e << a << b << "\n";
@@ -136,23 +136,23 @@ public:
   }
     
     
-  Point2D<double> getNearestNeighbor(Point2D<double> p) {
-    Point2D<double> nn = kd.nearestNeighbor3(&kd, p, 2);
-    return nn;
-  }
-  
   Point2D<double> getNearestNeighbor2(Point2D<double> p) {
     Point2D<double> nn = kd.nearestNeighbor2(&kd, p, 2);
     return nn;
   }
+  
+  Point2D<double> getNearestNeighbor3(Point2D<double> p) {
+    Point2D<double> nn = kd.nearestNeighbor3(&kd, p, 2);
+    return nn;
+  }
 
-  Point2D<double> getNearestNeighborS(Point2D<double> p) {
-    Point2D<double> nn = kds.nearestNeighbor3(&kd, p, 2);
+  Point2D<double> getNearestNeighbor2S(Point2D<double> p) {
+    Point2D<double> nn = kds.nearestNeighbor2(&kd, p, 2);
     return nn;
   }
   
-  Point2D<double> getNearestNeighbor2S(Point2D<double> p) {
-    Point2D<double> nn = kds.nearestNeighbor2(&kd, p, 2);
+  Point2D<double> getNearestNeighbor3S(Point2D<double> p) {
+    Point2D<double> nn = kds.nearestNeighbor3(&kd, p, 2);
     return nn;
   }
 
@@ -163,12 +163,12 @@ int main() {
 
   srand(time(0));
   //srand(0);
-  int N = 1000;
+  int N = 10000;
   vector<double> vecOfRandomNums(N);
   
   generate(vecOfRandomNums.begin(), vecOfRandomNums.end(), []()
 							   {
-							     return static_cast <double> (rand() % 2000 - 1000)/0.5;
+							     return static_cast <double> (rand() % 2000 - 1000)/50;
                                                            });
   
   vector<Point2D<double>> points(N/2);
@@ -199,7 +199,7 @@ int main() {
   t.test_kdTree(points, tpoints);
 
 
-  TestQuadTree q(-2000,2000,-2000,2000,5);
+  TestQuadTree q(-20,20,-20,20,5);
   q.test_quadTree(points, tpoints);
   
   return 0;

@@ -192,10 +192,10 @@ namespace util
             //tell opengl how to interpret the above data
             gl.glVertexAttribPointer(shaderLocation,
                                      vertexDataList[0].getData(it->second).size(),
-                GL_FLOAT,
-                GL_FALSE,
-                sizeof(float) * stride,
-                (void *)(sizeof(float) * offsets[it->second]));
+				     GL_FLOAT,
+				     GL_FALSE,
+				     sizeof(float) * stride,
+				     (void *)(sizeof(float) * offsets[it->second]));
             //enable this attribute so that when rendered, this is sent to the vertex shader
             gl.glEnableVertexAttribArray(shaderLocation);
           }
@@ -382,6 +382,7 @@ namespace util
   void ObjectInstance::draw(OpenGLFunctions& gl) const
   {
 
+    //    cout << "object instance: " << name <<"\n";
     //1. bind its VAO
     gl.glBindVertexArray(vao);
 
