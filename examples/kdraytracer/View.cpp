@@ -28,9 +28,7 @@ View::~View()
 }
 
 
-void View::init(util::OpenGLFunctions& gl)
-{
-
+void View::initShaders(util::OpenGLFunctions& gl) {
   cout << "loading shader\n";
     //create the shader program
     program.createProgram(gl,
@@ -46,19 +44,20 @@ void View::init(util::OpenGLFunctions& gl)
     map<string,string> shaderVarsToVertexAttribs;
     shaderVarsToVertexAttribs["vPosition"]="position";
     shaderVarsToVertexAttribs["vNormal"]="normal";
-    
-    s = myScene();
-    
+
     sr = new ScenegraphRenderer<VertexAttrib>(gl, shaderLocations, shaderVarsToVertexAttribs, program);
     
     s->setRenderer(sr);
-    
-
+    //    proj = glm::ortho(-0.1f, 0.0f ,0.0f,0.1f);
     proj = glm::perspective(1.5f, 1.0f, 0.1f, 10000.0f);
-    modelview = glm::lookAt(glm::vec3(-2.0f, 0.0f, 0.0f),
+    modelview = glm::lookAt(glm::vec3(9.0f, 7.3f, 3.0f),
   		   glm::vec3(0.0f, 0.0f, 0.0f),
-  		   glm::vec3(0.0f, 1.0f, 0.0f));
+  		   glm::vec3(0.0f, 1.0f, 1.0f));
+}
 
+void View::setScenegraph(Scenegraph<VertexAttrib>* sg)
+{
+  s = sg;
 }
 
 
@@ -69,10 +68,11 @@ void View::draw(util::OpenGLFunctions& gl)
     //set the background color to be white
     gl.glClearColor(0.0f,0.0f,0.0f,1.0f);
     //clear the background
-    gl.glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     //enable the shader program
     program.enable(gl);
-
+    glEnable(GL_DEPTH_TEST);
     //pass the projection matrix to the shader
     gl.glUniformMatrix4fv( //projection matrix is a uniform variable in shader
                            //4f indicates 4x4 matrix,
@@ -83,16 +83,6 @@ void View::draw(util::OpenGLFunctions& gl)
                 glm::value_ptr(proj)); //convenience function to convert
                                        //glm::mat4 to float array
 
-    /*
-    cout << "modelview: ";
-    for(int i = 0; i < 4; i++) {
-      for(int j = 0; j < 4; j++) {
-	cout << modelview[i][j] << ",";
-      }
-      cout << "    ";
-    }
-    cout << "\n";
-    */
     
     glm::mat4 modelview_trackball = modelview*trackballtransform;
     stack<glm::mat4> mvstack;

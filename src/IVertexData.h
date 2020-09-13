@@ -23,14 +23,14 @@ public:
      * \param attribName the name of the attribute that is being queried
      * \return true if data for this name is present, false otherwise
      */
-    virtual bool hasData(string attribName)=0;
+    virtual bool hasData(string attribName) const =0;
     /*
      * Returns the data for the supplied attribute name as a float array, for
      * maximum flexibility
      * \param attribName the (unique) name of the attribute
      * \return the attribute data as a float array
      */
-    virtual vector<float> getData(string attribName)=0;
+    virtual vector<float> getData(string attribName) const =0;
 
     /*
      * set the data for the given attribute. If attribute is not already present,

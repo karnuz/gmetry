@@ -1,3 +1,5 @@
+// Author : Dr. Amit Shesh, Northeastern University
+
 #ifndef _OBJIMPORTER_H_
 #define _OBJIMPORTER_H_
 
@@ -344,7 +346,6 @@ public:
         mesh.setPrimitives(triangles);
         mesh.setPrimitiveType(GL_TRIANGLES);
         mesh.setPrimitiveSize(3);
-
         if ((normals.size()==0) || (normals.size()!=vertices.size())) {
 	  //cout << "computing normalsss\n";
 	  //throw runtime_error("computing normals\n");

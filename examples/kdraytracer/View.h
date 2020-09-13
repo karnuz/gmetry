@@ -28,9 +28,10 @@ public:
      * OpenGL commands will work (i.e. don't do any OpenGL related stuff in the
      * constructor!)
      */
-    void init(util::OpenGLFunctions& e);
-    void init_a(util::OpenGLFunctions& e);
-    void init_b(util::OpenGLFunctions& e);
+  void initShaders(util::OpenGLFunctions& gl);
+  void setScenegraph(Scenegraph<VertexAttrib>* sg);
+//void init_a(util::OpenGLFunctions& e);
+//  void init_b(util::OpenGLFunctions& e);
     /*
      * This function is called whenever the window is to be redrawn
      */
@@ -72,7 +73,7 @@ private:
   Scenegraph<VertexAttrib>* s;
   //ScenegraphRenderer
   ScenegraphRenderer<VertexAttrib>* sr;
-
+  //rendering as wireframe or fill
   bool wireframe_active = false;
 };
 

@@ -128,9 +128,9 @@ public:
 
     }
 
-    cout<< "Time taken KD Tree: "<< duration <<'\n';
+    //    cout<< "Time taken KD Tree: "<< duration <<'\n';
     cout<< "Time taken KD Tree Efficient: "<< duration2 <<'\n';
-    cout<< "Time taken Sequential Insert KD Tree: "<< duration3 <<'\n';
+    //    cout<< "Time taken Sequential Insert KD Tree: "<< duration3 <<'\n';
     cout<< "Time taken Sequential Insert KD Tree Efficient: "<< duration4 <<'\n';
     
   }

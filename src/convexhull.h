@@ -34,22 +34,28 @@ class ConvexHull {
   //Point2D<T> p;
   
  public:
+  // implements graham scan algorithm. Takes in an array of points and
+  // returns a convex hull as a vector in anti-clockwise direction
   vector<Point2D<T>> grahamScan(Point2D<T> points[], int n);
+
+  // implements incremental algorithm to compute convex hull
+  // used to interactively compute convex hull
   vector<Point2D<T>> incrementHull(const vector<Point2D<T>> hull, const Point2D<T> p);
+
+
+  // methods to sort points in polar order with respect to one point.
   void sortPolar(Point2D<T> p_vec[], int n);
   void sortPolar(vector<Point2D<T>> &p_vec);
 
+  
+  // callable struct used to instantiate a comparator for sorting points in
+  // polar order with respect to one point.
   struct PolarCompare {
-
-    Point2D<T> p;
-
-    
+    Point2D<T> p;    
   public:
-
     PolarCompare(Point2D<T> p0) {
       p = p0;
     }
-    
     bool operator () (const Point2D<T>& p1, const Point2D<T>& p2) const {
       int o = get_orientation(p, p1, p2);
       if(o == 0) {
@@ -62,8 +68,6 @@ class ConvexHull {
   };
 
   
-  //private:
-  //int polarCompare(const Point2D<T> &p1, const Point2D<T> &p2);
 };
 
 
@@ -74,18 +78,6 @@ void ConvexHull<T>::sortPolar(vector<Point2D<T>> &p_vec) {
   Point2D<T> temp = p_vec[min];
   p_vec[min] = p_vec[0];
   p_vec[0] = temp;
-
-  // Both method below give same answer, and it is wrong.
-  
-  // 1.
-  // using independent polarcompare function
-  //p0 = p_vec[0];
-  //sort(p_vec.begin()+1, p_vec.end(), ppolarCompare );
-
-  //2.
-  // using class polar compare function
-  //this->p = p_vec[0];
-  //sort(p_vec.begin()+1, p_vec.end() , [this](Point2D x, Point2D y) { return this->polarCompare(x,y);});
 
   Point2D<T> p = p_vec[0];
   
@@ -108,8 +100,6 @@ void ConvexHull<T>::sortPolar(vector<Point2D<T>> &p_vec) {
 
 
 // sorts points in place
-//typedef std::size_t SIZE;
-
 template <typename T>
 void ConvexHull<T>::sortPolar(Point2D<T> points[], int n) {
   
@@ -144,6 +134,8 @@ void ConvexHull<T>::sortPolar(Point2D<T> points[], int n) {
   }
 }
 
+
+// implements graham scan algorithm to comput the hull
 template <typename T>
 vector<Point2D<T>> ConvexHull<T>::grahamScan(Point2D<T> points[], int n) {
   assert(n >= 3);
@@ -190,7 +182,7 @@ vector<Point2D<T>> ConvexHull<T>::grahamScan(Point2D<T> points[], int n) {
   return convexHullBoundary;  
 }
 
-
+// method to increment the hull with the new point input
 template <typename T>
 vector<Point2D<T>> ConvexHull<T>::incrementHull(const vector<Point2D<T>> hull, const Point2D<T> p) {
 
@@ -272,23 +264,6 @@ vector<Point2D<T>> ConvexHull<T>::incrementHull(const vector<Point2D<T>> hull, c
 
 
 
-// polar comparison function
-/*
-template <typename T>
-int compare(const void *vp1, const void *vp2) 
-{
-  //   assert(p0 != NULL);
-  Point2D<T> *p1 = (Point2D<T> *)vp1; 
-  Point2D<T> *p2 = (Point2D<T> *)vp2; 
-  
-   // Find orientation 
-   int o = get_orientation(p0, *p1, *p2); 
-   if (o == 0) 
-     return (distSq(p0, *p2) >= distSq(p0, *p1))? -1 : 1; 
-  
-   return (o == 1)? -1: 1; 
-}
-*/
 
 // Find the bottommost point
 template <typename T>
@@ -315,7 +290,8 @@ int findMinYXIndex(Point2D<T> points[], int n) {
 
 
 
-// returns the index of point which is least in Y. If more than two points are least in Y, returns the one least in X.
+// returns the index of point which is least in Y. If more than two points
+// are least in Y, returns the one least in X.
 template <typename T>
 int findMinYXIndex(vector<Point2D<T>> p_vec) {
   assert(p_vec.size() > 0);

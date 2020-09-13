@@ -2,6 +2,8 @@
 #include <GLFW/glfw3.h>
 #include "OpenGLFunctions.h"
 #include "View.h"
+#include "RTView.h"
+#include "VertexAttrib.h"
 
 
 
@@ -69,6 +71,10 @@ private:
   bool dragged;
 
   bool cursor_in_window;
+
+  RayTracer* rt;
+
+  bool rt_active = true;
   
 public:
   OpenGLWindow() {
@@ -100,16 +106,31 @@ public:
     set_mouse_button_callback();
     set_key_callback();
     
-    //    set_cursor_enter_callback();
+    //set_cursor_enter_callback();
     //setWindowResizeCallback();
-    //        glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    //glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     //glfwSetMouseButtonCallback(window, mouse_button_callback);
+
     initializeGL();
+
+    if(rt_active) {
+      rt = new RayTracer();
+    }
+
+    initializeViews();
   }
 
   void initializeGL() {
     gl = new util::OpenGLFunctions();
-    view.init(*gl);
+    //    view.init(*gl);
+    
+  }
+
+  void initializeViews() {
+    Scenegraph<VertexAttrib>* s = myScene();
+    view.setScenegraph(s);
+    view.initShaders(*gl);
+    rt->setScenegraph(s);
   }
 
   /*
@@ -120,6 +141,10 @@ public:
 
   void draw() {
 
+    if(rt_active) {
+      rt->generateImage();
+    }
+    
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
 
@@ -135,6 +160,8 @@ public:
 
     }
     glfwTerminate();
+
+    
   }
 
 
@@ -309,52 +336,3 @@ public:
 
 
 
-
-/*
-    if(dragged) {
-      //      double xpos, ypos;
-      glfwGetCursorPos(window, &xpos, &ypos);
-      glm::vec2 delta = glm::vec2(xpos - this->mousePos[0], ypos - this->mousePos[1]);
-      this->view.trackball(delta);
-      this->mousePos = glm::vec2(xpos, ypos);
-      cout << "mousePos: " << mousePos[0] << ", " << mousePos[1] << "\n";
-      cout << "delta: " << delta[0] << ", " << delta[1] << "\n";
-      action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-      //if(action == GLFW_RELEASE) {
-      //	dragged = false;
-      //}
-    }
-    */
-
-
-  /*
-  
-  template <typename F, typename C>
-  void setClickPositionCallback(F func, C *obj) {
-
-    //(func)(8.0,5.0);   // wont work
-    //((*obj).*func)(6.0,4.0);
-
-    MyGLWindow<F,C> *gw = new MyGLWindow(func, obj);
-    
-    glfwSetWindowUserPointer(window, gw);
-    
-    auto mouse_button_callback = [](GLFWwindow* w, int button, int action, int mods)
-    {
-      if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-	{
-	  double xpos, ypos;
-	  //getting cursor position                     
-	  glfwGetCursorPos(w, &xpos, &ypos);
-	  int width, height;
-	  glfwGetFramebufferSize(w, &width, &height);
-      	  static_cast<MyGLWindow<F,C>*>(glfwGetWindowUserPointer(w))->mouseButtonPressed(60*(-0.5 + (2*xpos/width)), 60*(0.5 - (2*ypos/height)));
-	  // func(xpos,ypos);
-	  //	  cout << "Cursor Position is " << xpos << " : " << ypos << " width: " << width << " height " << height << endl;
-	}
-    };
-
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
-    
-  } 
-  */ 

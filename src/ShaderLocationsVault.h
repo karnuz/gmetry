@@ -1,3 +1,5 @@
+//Author: Dr. Amit Shesh, Northeastern University
+
 #ifndef _SHADERLOCATIONSVAULT_H_
 #define _SHADERLOCATIONSVAULT_H_
 

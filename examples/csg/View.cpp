@@ -69,9 +69,11 @@ void View::draw(util::OpenGLFunctions& gl)
     //set the background color to be white
     gl.glClearColor(0.0f,0.0f,0.0f,1.0f);
     //clear the background
-    gl.glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //    gl.glClear(GL_COLOR_BUFFER_BIT);
     //enable the shader program
     program.enable(gl);
+    glEnable(GL_DEPTH_TEST);
 
     //pass the projection matrix to the shader
     gl.glUniformMatrix4fv( //projection matrix is a uniform variable in shader
@@ -83,16 +85,6 @@ void View::draw(util::OpenGLFunctions& gl)
                 glm::value_ptr(proj)); //convenience function to convert
                                        //glm::mat4 to float array
 
-    /*
-    cout << "modelview: ";
-    for(int i = 0; i < 4; i++) {
-      for(int j = 0; j < 4; j++) {
-	cout << modelview[i][j] << ",";
-      }
-      cout << "    ";
-    }
-    cout << "\n";
-    */
     
     glm::mat4 modelview_trackball = modelview*trackballtransform;
     stack<glm::mat4> mvstack;
@@ -153,20 +145,28 @@ void View::trackball(glm::vec2 delta)
   transform = glm::rotate(transform, delta[0]/300, glm::vec3(0.0f, 1.0f, 0.0f));
   transform = glm::rotate(transform, delta[1]/300, glm::vec3(1.0f, 0.0f, 0.0f));
   trackballtransform = trackballtransform*transform;
-  //  cout << delta[0] << " :: " << delta[1] << " :trackball\n";
 }
 
 
 void View::key_callback(char input, util::OpenGLFunctions& gl)
 {
-  if(input == 'a') {
+  if(input == '1') {
     s->toggleNode("leaf1");
   }
-  else if (input == 'b') {
+  else if (input == '2') {
     s->toggleNode("leaf2");
   }
-  else if (input == 'c') {
+  else if (input == '3') {
     s->toggleNode("leaf3");
+  }
+  else if (input == '4') {
+    s->toggleNode("leaf4");
+  }
+  else if (input == '5') {
+    s->toggleNode("leaf5");
+  }
+  else if (input == '6') {
+    s->toggleNode("leaf6");
   }
   else if (input == 'w') {
     if(wireframe_active) {

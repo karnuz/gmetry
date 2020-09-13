@@ -15,6 +15,15 @@ class NormalZero_Exception: public std::exception
   }
 };
 
+class CannotSplitNode_Exception: public std::exception
+{
+  
+  virtual const char* what() const throw()
+  {
+    return "Cannot split node.\n";
+  }
+};
+
 
 class dimension_not_handled_exception: public exception
 {

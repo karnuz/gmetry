@@ -1,3 +1,7 @@
+/*
+  We implement a KD Tree here. 
+ */
+
 #ifndef _KDTREE_H_
 #define _KDTREE_H_
 
@@ -8,6 +12,11 @@
 
 using namespace std;
 
+
+/*
+This class represents a KDTree. We implement a nearest neighbor search algorithm
+in this KD tree.
+ */
 template <class T>
 class KDTree: public BinaryTree<T>
 {
@@ -16,6 +25,9 @@ public:
 
   KDTree() { }
 
+  /*
+    a callable struct we use to sort the points in specified dimension.
+   */
 
   struct Compare {
   public:
@@ -26,6 +38,16 @@ public:
   };
 
 
+  /*
+    This method creats a KD Tree and returns root node of the tree. Here we take a 
+    batch of points and not sequentially.
+    @params begin : iterator pointing to the begining of points to be inserted
+    @params end : iterator pointing to the end of the points to be inserted
+    @params dim : dimension of points.
+    @params n : numer of points
+    @level : level of node that helps in deciding whether tree will be partitioned 
+             horizontally or vertically
+   */
   template <typename Iterator>
   Node<T>* createTree(Iterator begin, Iterator end, int dim, int n, int level=0) {
 
@@ -34,7 +56,6 @@ public:
     }
     
     int d_idx = level%dim;
-    //    cout << d_idx << " - split idx\n"; 
     Compare comp(d_idx);
 
     std::sort(begin, end, comp);
@@ -65,6 +86,11 @@ public:
 
   }
 
+  /*
+    This method is used to insert one point into the KD tree.
+    @params data : point to be inserted
+    @params dim : dimension of point
+   */
   Node<T>* insert(T data, int dim) {
     Node<T>* newnode = new Node<T>(data);
 
@@ -104,6 +130,15 @@ public:
   }
 
 
+  /*
+    First and most inefficient algorithm to comptute nearest neighbor.
+    It starts searching from the root node itself instead of first going 
+    to the 'most probable' leaf node.
+    @params tree : tree to be searched
+    @params data : point whose nearest neighbor we are looking for
+    @params dim : dimension of points
+    @returns : point which is nearest neighbor
+   */
   T nearestNeighbor(KDTree<T> *tree ,T data, int dim) {
     
     if(tree->isEmpty()) {
@@ -115,12 +150,10 @@ public:
     double bestDist = (double) dist(data, bestNode->GetData());
     int level = 0;
     
-    //cout << bestNode->GetData();
     stack<tuple<Node<T> *, int>> st;
     st.push(tuple(ptr,level));
 
     int nnv = 0;
-    //cout << "best distance : " << bestDist << "\n";
     while(!st.empty()) {
 
       nnv += 1;
@@ -131,7 +164,6 @@ public:
       level = get<1>(t);
       
       T ndata = ptr->GetData();
-      //cout << "ndata:" << ndata; 
       double d = (double) dist(data, ndata);
       //cout << d <<"\n";
       if (d < bestDist) {
@@ -140,7 +172,6 @@ public:
       }
       int split_idx = level%dim;
 
-      //      cout << split_idx << " - split idx\n";
       // point on right/up/greater side of split index
       if (data[split_idx] >= ndata[split_idx]) {
 	if(abs(data[split_idx] - ndata[split_idx]) < bestDist && ptr->IsLeft()) {
@@ -164,6 +195,16 @@ public:
   }
 
 
+  /*
+    Second algorithm to comptute nearest neighbor.
+    It starts searching from the leaf which is the 'most probable' nearest
+    point to the query point. However does not update the minimum distance
+    after searching one branch and starts searching other branch.
+    @params tree : tree to be searched
+    @params data : point whose nearest neighbor we are looking for
+    @params dim : dimension of points
+    @returns : point which is nearest neighbor
+   */
 
   T nearestNeighbor2(KDTree<T> *tree ,T data, int dim) {
     
@@ -266,6 +307,16 @@ public:
 
 
 
+  /*
+    Second algorithm to comptute nearest neighbor.
+    It starts searching from the leaf which is the 'most probable' nearest
+    point to the query point. This updates the minimum distance
+    after searching one branch and then searches other branch.
+    @params tree : tree to be searched
+    @params data : point whose nearest neighbor we are looking for
+    @params dim : dimension of points
+    @returns : point which is nearest neighbor
+   */
 
   T nearestNeighbor3(KDTree<T> *tree ,T data, int dim) {
     
@@ -276,9 +327,9 @@ public:
     Node<T> * ptr = tree->getRoot();
     int level = 0;
     
-    //cout << bestNode->GetData();
 
-    // the third value represents if the node was added unconditionally ( one side unexplored, or conditionally
+    // the third value represents if the node was added unconditionally
+    
     vector<tuple<Node<T> *, int, int>> st;
     st.push_back(tuple(ptr,level,0));
 
@@ -314,16 +365,12 @@ public:
     int k;
 
     int nnv = 0;
-    //    cout << "stack:\n";
     
-    //cout << "best distance : " << bestDist << "\n";
     while(!st.empty()) {
    
       for(auto e: st) {
 	Node<T>* ee = get<0>(e);
-	//	cout << (*ee).GetData() << " ";
       }
-      //cout << "\n";
 
       k = st.size();
       auto t = st[st.size()-1];
@@ -339,12 +386,10 @@ public:
       // if it was a normal push
       if(cond == 0) {
 
-	//	nnv += 1;
 	if (d < bestDist) {
 	  bestDist = d;
 	  bestNode = ptr;
 	}
-	//cout << bestNode->GetData() << " :best node\n";
 	
       // point on right/up/greater side of split index
 	if (data[split_idx] <= ndata[split_idx]) {
@@ -380,7 +425,6 @@ public:
 	assert(k>N);
       }
     }
-    //    cout << "num_nodes_visited_third:" << nnv << "\n";
     return bestNode->GetData();
 
   }  

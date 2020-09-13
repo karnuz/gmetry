@@ -161,14 +161,23 @@ public:
   void key_callback(int key, int scancode, int action, int mods)
   {
     if (action == GLFW_PRESS) {
-      if(key == GLFW_KEY_A) {
-	this->view.key_callback('a', *gl);
+      if(key == GLFW_KEY_1) {
+	this->view.key_callback('1', *gl);
       }
-      else if(key == GLFW_KEY_B) {
-	this->view.key_callback('b', *gl);
+      else if(key == GLFW_KEY_2) {
+	this->view.key_callback('2', *gl);
       }
-      else if(key == GLFW_KEY_C) {
-	this->view.key_callback('c', *gl);
+      else if(key == GLFW_KEY_3) {
+	this->view.key_callback('3', *gl);
+      }
+      else if(key == GLFW_KEY_4) {
+	this->view.key_callback('4', *gl);
+      }
+      else if(key == GLFW_KEY_5) {
+	this->view.key_callback('5', *gl);
+      }
+      else if(key == GLFW_KEY_6) {
+	this->view.key_callback('6', *gl);
       }
       else if(key == GLFW_KEY_W) {
 	this->view.key_callback('w', *gl);
@@ -305,56 +314,3 @@ public:
   
 };
 
-
-
-
-
-
-/*
-    if(dragged) {
-      //      double xpos, ypos;
-      glfwGetCursorPos(window, &xpos, &ypos);
-      glm::vec2 delta = glm::vec2(xpos - this->mousePos[0], ypos - this->mousePos[1]);
-      this->view.trackball(delta);
-      this->mousePos = glm::vec2(xpos, ypos);
-      cout << "mousePos: " << mousePos[0] << ", " << mousePos[1] << "\n";
-      cout << "delta: " << delta[0] << ", " << delta[1] << "\n";
-      action = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-      //if(action == GLFW_RELEASE) {
-      //	dragged = false;
-      //}
-    }
-    */
-
-
-  /*
-  
-  template <typename F, typename C>
-  void setClickPositionCallback(F func, C *obj) {
-
-    //(func)(8.0,5.0);   // wont work
-    //((*obj).*func)(6.0,4.0);
-
-    MyGLWindow<F,C> *gw = new MyGLWindow(func, obj);
-    
-    glfwSetWindowUserPointer(window, gw);
-    
-    auto mouse_button_callback = [](GLFWwindow* w, int button, int action, int mods)
-    {
-      if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-	{
-	  double xpos, ypos;
-	  //getting cursor position                     
-	  glfwGetCursorPos(w, &xpos, &ypos);
-	  int width, height;
-	  glfwGetFramebufferSize(w, &width, &height);
-      	  static_cast<MyGLWindow<F,C>*>(glfwGetWindowUserPointer(w))->mouseButtonPressed(60*(-0.5 + (2*xpos/width)), 60*(0.5 - (2*ypos/height)));
-	  // func(xpos,ypos);
-	  //	  cout << "Cursor Position is " << xpos << " : " << ypos << " width: " << width << " height " << height << endl;
-	}
-    };
-
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
-    
-  } 
-  */ 

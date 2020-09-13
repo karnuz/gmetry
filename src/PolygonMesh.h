@@ -6,6 +6,9 @@
 #define GLM_SWIZZLE
 #include <glm/glm.hpp>
 #include <vector>
+#include <iostream>
+#include "math.h"
+
 using namespace std;
 
 namespace util
@@ -74,8 +77,8 @@ public:
      */
     void computeBoundingBox();
   PolygonMesh<VertexType> getTransformedMesh(glm::mat4 transform);
-
-
+  bool rayHitMesh(glm::vec4 origin, glm::vec4 direction);
+  void cleanMesh();
 
 protected:
     vector<VertexType> vertexData;
@@ -169,6 +172,7 @@ template<class VertexType>
 void PolygonMesh<VertexType>::setPrimitives(const vector<unsigned int>& t)
 {
     primitives = vector<unsigned int>(t);
+ 
 }
 
 
@@ -250,7 +254,6 @@ void PolygonMesh<VertexType>::computeNormals()
   std::cout << "bool: ";
     int i,j,k;
 
-    cout << "iska kya" << vertexData.size() << "ho gaya\n";
     cout << vertexData[0].hasData("position") << "," << vertexData[0].hasData("normal") << "\n";
 
     if (vertexData.size()<=0)
@@ -261,8 +264,6 @@ void PolygonMesh<VertexType>::computeNormals()
         return;
     }
 
-    //    if (!vertexData[0].hasData("normal"))
-    //    return;
 
     vector<glm::vec4> positions;
 
@@ -364,6 +365,151 @@ PolygonMesh<VertexType> PolygonMesh<VertexType>::getTransformedMesh(glm::mat4 tr
     v.transform(transform);
   }
   return result;
+}
+
+
+template<class VertexType>
+bool PolygonMesh<VertexType>::rayHitMesh(glm::vec4 origin, glm::vec4 direction) {
+
+  float FLOAT_MAX = 99999999.0;
+  float FLOAT_MIN = -99999999.0;
+  
+  float txmin;
+  float tymin;
+  float tzmin;
+  float txmax;
+  float tymax;
+  float tzmax;
+
+
+  glm::vec4 minbounds = getMinimumBounds();
+  glm::vec4 maxbounds = getMaximumBounds();
+
+  /*
+  for(int i = 0; i < 3; i++) {
+    cout << minbounds[i] << ",";
+  }
+  cout << " : min bounds\n";
+  for(int i = 0; i < 3; i++) {
+    cout << maxbounds[i] << ",";
+  }
+  cout << " : max bounds\n";
+  for(int i = 0; i < 3; i++) {
+    cout << origin[i] << ",";
+  }
+  cout << " : origin\n";
+  for(int i = 0; i < 3; i++) {
+    cout << direction[i] << ",";
+  }
+  cout << " : direction\n";
+  */
+  
+  float xmin = minbounds[0];
+  float ymin = minbounds[1];
+  float zmin = minbounds[2];
+  float xmax = maxbounds[0];
+  float ymax = maxbounds[1];
+  float zmax = maxbounds[2];
+
+
+  
+  float dx = direction[0];
+  float dy = direction[1];
+  float dz = direction[2];
+  float ox = origin[0];
+  float oy = origin[1];
+  float oz = origin[2];
+
+  if(abs(dx) <= 0.00000001) {
+    if(ox < xmin || ox > xmax) {
+      return false;
+    } else {
+      txmin = FLOAT_MIN;
+      txmax = FLOAT_MAX;
+    }
+  } else {
+    float a = (xmax - ox)/dx;
+    float b = (xmin - ox)/dx;
+    txmin = (a<=b)? a:b;
+    txmax = (a>b)? a:b;
+  }
+
+  if(abs(dy) <= 0.00000001) {
+    if(oy < ymin || oy > ymax) {
+      return false;
+    } else {
+      tymin = FLOAT_MIN;
+      tymax = FLOAT_MAX;
+    }
+  } else {
+    float a = (ymax - oy)/dy;
+    float b = (ymin - oy)/dy;
+    tymin = (a<=b)? a:b;
+    tymax = (a>b)? a:b;
+  }
+
+  if(abs(dz) <= 0.00000001) {
+    if(oz < zmin || oz > zmax) {
+      return false;
+    } else {
+      tzmin = FLOAT_MIN;
+      tzmax = FLOAT_MAX;
+    }
+  } else {
+    float a = (zmax - oz)/dz;
+    float b = (zmin - oz)/dz;
+    tzmin = (a<=b)? a:b;
+    tzmax = (a>b)? a:b;
+  }
+
+  float tmax = txmax;
+  if(tymax < tmax) tmax = tymax;
+  if(tzmax < tmax) tmax = tzmax;
+
+  float tmin = txmin;
+  if(tymin > tmin) tmin = tymin;
+  if(tzmin > tmin) tmin = tzmin;
+
+  //  cout << "tmin: " << tmin << "  tmax: " << tmax << "\n";
+  if(tmin > tmax || tmax < 0) {
+    return false;
+  } else {
+    return true;
+  }
+  
+}
+
+template<class VertexType>
+void PolygonMesh<VertexType>::cleanMesh() {
+  vector<unsigned int> new_primitives;
+  //cout << primitives.size() << "\n";
+  //cout << primitiveSize << "  :primitiveSize\n";
+  for (int i = 0; i < primitives.size(); i += primitiveSize) {
+    bool valid = true;
+    for(int j = 0; j < primitiveSize-1; j += 1) {
+      for(int k = j+1; k < primitiveSize; k+= 1) {
+	//	cout << i+j << " " << i + k << " comparing\n";
+	auto a = vertexData[primitives[i+j]].getData("position");
+	auto b = vertexData[primitives[i+k]].getData("position");
+	//cout << a[0] << " " << a[1] << " " << a[2] << " " << b [0] << " " << b[1]
+	//     << " " << b[2] << "\n";
+	if(abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2]) < 0.0001 ) {
+	  valid = false;
+	  break;
+	}
+      }
+      if(!valid) {
+	break;
+      }
+    }
+    if(valid) {
+      for(int m = 0; m < primitiveSize; m++) {
+	new_primitives.push_back(primitives[i+m]);
+      }
+    }
+  }
+  primitives = new_primitives;
+  //cout << "primitive size: " << primitives.size() << "\n";
 }
 
 }

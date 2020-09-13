@@ -5,8 +5,10 @@
 
 #include <glm/glm.hpp>
 #include "IVertexData.h"
-
-
+#include <iostream>
+#include <sstream>
+#include "exceptions.h"
+#include <array>
 
 /*
  * This class represents the attributes of a single vertex. It is useful in building
@@ -30,7 +32,7 @@ public:
 
 
 
-  bool hasData(string attribName)
+  bool hasData(string attribName) const
   {
     if (attribName == "position") {
       return hasPosition;
@@ -47,7 +49,7 @@ public:
       }
   }
   
-  vector<float> getData(string attribName)
+  vector<float> getData(string attribName) const
   {
     vector<float> result;
     stringstream message;
@@ -155,6 +157,12 @@ public:
     glm::mat4 inversetranspose = glm::transpose(inverse);
     normal = inversetranspose*normal;
   }
+
+  void flipNormal() {
+    normal[0] = -normal[0];
+    normal[1] = -normal[1];
+    normal[2] = -normal[2];
+  }
   
 private:
   glm::vec4 position;
@@ -164,6 +172,140 @@ private:
   bool hasNormal = false;
   bool hasTexcoord = false;
 };
+
+
+static std::array<float,4> calculate_plane_from_points(const std::array<const std::reference_wrapper<VertexAttrib>,3> triangle) {
+
+  vector<float> p = triangle[0].get().getData("position");
+  vector<float> q = triangle[1].get().getData("position");
+  vector<float> r = triangle[2].get().getData("position");
+  
+  vector<float> a{q[0]-p[0], q[1]-p[1], q[2]-p[2]};
+  vector<float> b{r[0]-p[0], r[1]-p[1], r[2]-p[2]};
+  
+  vector<float> normal(3,0.0);
+  normal[0] = a[1] * b[2] - a[2] * b[1];
+  normal[1] = -a[0] * b[2] + a[2] * b[0];
+  normal[2] = a[0] * b[1] - a[1] * b[0];
+
+  
+  double norm = sqrt(normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]);
+
+  
+  if(norm == 0) {
+    throw NormalZero_Exception();
+  }
+  
+  
+  normal[0] = normal[0]/norm;
+  normal[1] = normal[1]/norm;
+  normal[2] = normal[2]/norm;
+
+  
+  if(triangle[0].get().hasData("normal")) {
+    vector<float> vnormal = triangle[0].get().getData("normal");
+    double d = vnormal[0]*normal[0] + vnormal[1]*normal[1] + vnormal[2]*normal[2];
+    if(d < -0.000001) {
+      normal[0] = -normal[0];
+      normal[1] = -normal[1];
+      normal[2] = -normal[2];
+    }
+  }
+  
+  
+  
+  
+  float d = -normal[0]*p[0] - normal[1]*p[1] - normal[2]*p[2];
+  
+  return std::array<float,4>{{normal[0], normal[1], normal[2], d}};
+
+}
+static std::array<float,4> calculate_plane_from_points(const std::array<VertexAttrib,3> triangle) {
+  
+  vector<float> p = triangle[0].getData("position");
+  vector<float> q = triangle[1].getData("position");
+  vector<float> r = triangle[2].getData("position");
+  
+  vector<float> a{q[0]-p[0], q[1]-p[1], q[2]-p[2]};
+  vector<float> b{r[0]-p[0], r[1]-p[1], r[2]-p[2]};
+  
+  vector<float> normal(3,0.0);
+  normal[0] = a[1] * b[2] - a[2] * b[1];
+  normal[1] = -a[0] * b[2] + a[2] * b[0];
+  normal[2] = a[0] * b[1] - a[1] * b[0];
+
+  double norm = sqrt(normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]);
+
+  
+  if(norm == 0) {
+    throw NormalZero_Exception();
+  }
+  
+  
+  normal[0] = normal[0]/norm;
+  normal[1] = normal[1]/norm;
+  normal[2] = normal[2]/norm;
+
+  
+  if(triangle[0].hasData("normal")) {
+    vector<float> vnormal = triangle[0].getData("normal");
+    double d = vnormal[0]*normal[0] + vnormal[1]*normal[1] + vnormal[2]*normal[2];
+    if(d < -0.000001) {
+      normal[0] = -normal[0];
+      normal[1] = -normal[1];
+      normal[2] = -normal[2];
+    }
+  }
+  
+  
+  
+  float d = -normal[0]*p[0] - normal[1]*p[1] - normal[2]*p[2];
+  
+  return std::array<float,4>{{normal[0], normal[1], normal[2], d}};
+  
+}
+
+static std::array<float,4> calculate_plane_from_points(const VertexAttrib& v1,
+						       const VertexAttrib& v2,
+						       const VertexAttrib& v3) {
+  
+  
+  vector<float> p = v1.getData("position");
+  vector<float> q = v2.getData("position");
+  vector<float> r = v3.getData("position");
+  
+  vector<float> a{q[0]-p[0], q[1]-p[1], q[2]-p[2]};
+  vector<float> b{r[0]-p[0], r[1]-p[1], r[2]-p[2]};
+  
+  vector<float> normal(3,0.0);
+  normal[0] = a[1] * b[2] - a[2] * b[1];
+  normal[1] = -a[0] * b[2] + a[2] * b[0];
+  normal[2] = a[0] * b[1] - a[1] * b[0];
+
+  double norm = sqrt(normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]);
+  
+  if(norm == 0) {
+    throw NormalZero_Exception();
+  }
+  
+  normal[0] = normal[0]/norm;
+  normal[1] = normal[1]/norm;
+  normal[2] = normal[2]/norm;
+  
+  
+  float d = -normal[0]*p[0] - normal[1]*p[1] - normal[2]*p[2];
+  
+  return std::array<float,4>{{normal[0], normal[1], normal[2], d}};
+  
+}
+
+
+inline ostream& operator<<(ostream& os, const VertexAttrib& t)
+{
+  const std::vector<float> o = t.getData("position");
+  os << o[0] << ", " << o[1] << "," << o[2];
+  return os;
+}
 
 #endif
 

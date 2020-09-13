@@ -10,12 +10,20 @@
 
 using namespace std;
 
+
+/*
+This struct is returned by the nearest neighbor search
+It contains the nearest point and the distance to it.
+ */
 template <typename T>
 struct PtInfo {
   T data;
   double d;
 };
 
+/*
+  Represents node of a quad tree. It is a pure virtual class.
+ */
 template <typename T>
 class QuadNode {
 public:
@@ -28,39 +36,82 @@ public:
   QuadNode() {
   }
 
+  /*
+    This constructor constructs a node that represents the region
+    as given my input parameters
+    @params xmin : minmum bound of node in x direction
+    @params xmax : maximum bound of node in x direction
+    @params ymin : minmum bound of node in y direction
+    @params ymax : maximum bound of node in y direction
+   */
   QuadNode(double xmin, double xmax, double ymin, double ymax) {
     this->xmin = xmin;
     this->xmax = xmax;
     this->ymin = ymin;
     this->ymax = ymax;
-    //    this->MAX_BUCKET_SIZE = max_bucket_size;
   }
-  
+
+
+  /*
+    The method inserts a data point into the sub tree representee
+    by this node
+    @params data : point to be inserted
+  */
   virtual QuadNode<T>* insert(T data) = 0;
 
+  /*
+    The method returns a flag wheter the node is empty or not.
+    A node is empty if the sub tree represented by it is empty
+    @returns : bool representing if node is empty
+  */
   virtual bool empty() {
     return this->bucket_size == 0;
   }
   
 
+  /*
+    @returns returns the number of points in the subtree represented by this node
+  */
   virtual int bucketsize() = 0;
-  
+
+  /*
+    This method returns a bool telling if a point is within region specified by this node
+  */
   bool IsPointInQuad(T data) {
-    //cout << xmin << " " << xmax << " " << ymin << " " << ymax << "\n"; 
     if (data[0] <= xmax && data[0] >= xmin && data[1] <= ymax && data[1] >= ymin) {
       return true;
     }
     return false;
   }
 
+  /*
+    The method returns all the points in the subtree of this node as a vector
+  */
   virtual vector<T> bfs() = 0;
 
+  /*
+    The method returns the nearest neighbor to the parameter point.
+    @params p : point whose nearest neighbor is to be searched
+  */
   virtual T nearestNeighbor(T p) = 0;
 
+  /*
+    The method returns the nearest neighbor and distance to the parameter point.
+    @params p : point whose nearest neighbor is to be searched
+    @params nn : point currently the nearest neighbor
+   */
   virtual struct PtInfo<T> nearestNeighbor(T p, struct PtInfo<T> nn) = 0;
 
+  /*
+    This method returns the nearest neighbor to a point only if the
+    query point is in the quad represented by this node.
+    @params p : query point
+  */
   virtual PtInfo<T> findNearestPointInQuad(T p) = 0;
 
+  /*
+    returns the bound of the quad represented by this node.
+   */
   virtual vector<T> getBounds() = 0;
 };
 
@@ -75,22 +126,26 @@ public:
   
 public:
 
-  int bucketsize() {
-
-    return this->bucket_size;
-    //return this->bl->bucketsize() + this->br->bucketsize() + this->tr->bucketsize() + this->tl->bucketsize();
-    //    return -1;
+  BoundaryNode(double xmin, double xmax, double ymin, double ymax):
+    QuadNode<T>(xmin,xmax,ymin,ymax) {
   }
 
+  /*
+    @returns returns the number of points in the subtree represented by this node
+  */
+  int bucketsize() {
+    return this->bucket_size;
+  }
+
+  
+  /*
+    returns the bound of the quad represented by this node.
+  */
   vector<T> getBounds() {
     vector<T> a = bl->getBounds();
     vector<T> b = br->getBounds();
     vector<T> c = tl->getBounds();
     vector<T> d = tr->getBounds();
-    //cout << a.size() << "size a" << "\n";
-    //cout << b.size() << "size b" << "\n";
-    //cout << c.size() << "size c" << "\n";
-    //cout << d.size() << "size d" << "\n";
     a.insert(
       a.end(),
       std::make_move_iterator(b.begin()),
@@ -110,22 +165,29 @@ public:
     return a;
   }
 
+
+
+  /*
+    The method returns the nearest neighbor to the parameter point.
+    @params p : point whose nearest neighbor is to be searched
+  */
   T nearestNeighbor(T p) {
     if(this->empty()) {
-      throw no_point_in_quad_exception;
+      throw no_point_in_quad_exception();
     }
     T q;
     struct PtInfo<T> nn;
     nn = this->findNearestPointInQuad(p);
-    //cout << nn.data << "  this \n";
-    //nn.d = 100000.0;
-      //nn.data = q;
     nn = this->nearestNeighbor(p, nn);
     return nn.data;
   }
 
 
-  // should be renamed - this name gives wrong impression
+  /*
+    This method returns the nearest neighbor to a point only if the
+    query point is in the quad represented by this node.
+    @params p : query point
+  */
   struct PtInfo<T> findNearestPointInQuad(T p) {
     //cout << "point is " << p << "\n";
     if(!this->IsPointInQuad(p)) {
@@ -145,13 +207,11 @@ public:
     else if(tr->IsPointInQuad(p) && !tr->empty()) {
       return tr->findNearestPointInQuad(p);
     } else {
-      //cout << "hhhereree\n";
       vector<T> v = bfs();
       PtInfo<T> nn;
       nn.data = v[0];
       nn.d = dist(p, v[0]);
       for(auto e: v) {
-	//cout << "all: " << e;
 	double d = dist(p,e);
 	if(d < nn.d) {
 	  nn.d = d;
@@ -162,9 +222,10 @@ public:
     }
   }
 
-
+  /*
+    The method returns all the points in the subtree of this node as a vector
+  */
   vector<T> bfs() {
-    //cout <<",boundarynode,datasize:" << this->bucket_size << "\n";
     vector<T> a = this->bl->bfs();
     vector<T> b = this->br->bfs();
     vector<T> c = this->tr->bfs();
@@ -188,14 +249,15 @@ public:
     return a;
   }
     
-  BoundaryNode(double xmin, double xmax, double ymin, double ymax):
-    QuadNode<T>(xmin,xmax,ymin,ymax) {
-  }
-
+  /*
+    The method inserts a data point into the sub tree representee
+    by this node
+    @params data : point to be inserted
+  */
   QuadNode<T>* insert(T p) {
 
     if(!this->IsPointInQuad(p)) {
-      throw point_out_of_boundary_exception;
+      throw point_out_of_boundary_exception();
     }
     // find the right quad. delegate to that quad
     if(bl->IsPointInQuad(p)) {
@@ -215,63 +277,16 @@ public:
   }
 
 
-  
+  /*
+    The method returns the nearest neighbor and distance to the parameter point.
+    @params p : point whose nearest neighbor is to be searched
+    @params nn : point currently the nearest neighbor
+  */
   struct PtInfo<T> nearestNeighbor(T p, struct PtInfo<T> nn) {
     
     if (p[0] < this->xmin - nn.d || p[0] > this->xmax + nn.d || p[1] < this->ymin - nn.d || p[1] > this->ymax + nn.d) {
       return nn;
     }
-
-    /*
-    // redefine nn
-    if(!bl->empty()) {
-      if (p[0] < bl->xmin - nn.d || p[0] > bl->xmax + nn.d || p[1] < bl->ymin - nn.d || p[1] > bl->ymax + nn.d) {
-	//skip this
-      } else {	
-	double a = (p[0] - bl->xmin)*(p[0] - bl->xmin) + (p[1] - bl->ymin)*(p[1] - bl->ymin);
-	double b = (p[0] - bl->xmax)*(p[0] - bl->xmax) + (p[1] - bl->ymin)*(p[1] - bl->ymin);
-	double c = (p[0] - bl->xmin)*(p[0] - bl->xmin) + (p[1] - bl->ymax)*(p[1] - bl->ymax);
-	double d = (p[0] - bl->xmax)*(p[0] - bl->xmax) + (p[1] - bl->ymax)*(p[1] - bl->ymax);
-	nn.d = min(nn.d, max(max(max(a,b),c),d));
-      }
-    }
-      
-    if(!br->empty()) {
-      if (p[0] < br->xmin - nn.d || p[0] > br->xmax + nn.d || p[1] < br->ymin - nn.d || p[1] > br->ymax + nn.d) {
-	//skip this
-      } else {
-	double a = (p[0] - br->xmin)*(p[0] - br->xmin) + (p[1] - br->ymin)*(p[1] - br->ymin);
-	double b = (p[0] - br->xmax)*(p[0] - br->xmax) + (p[1] - br->ymin)*(p[1] - br->ymin);
-	double c = (p[0] - br->xmin)*(p[0] - br->xmin) + (p[1] - br->ymax)*(p[1] - br->ymax);
-	double d = (p[0] - br->xmax)*(p[0] - br->xmax) + (p[1] - br->ymax)*(p[1] - br->ymax);
-	nn.d = min(nn.d, max(max(max(a,b),c),d));
-      }
-    }
-      
-    if(!tl->empty()) {
-      if (p[0] < tl->xmin - nn.d || p[0] > tl->xmax + nn.d || p[1] < tl->ymin - nn.d || p[1] > tl->ymax + nn.d) {
-	//skip this
-      } else {
-	double a = (p[0] - tl->xmin)*(p[0] - tl->xmin) + (p[1] - tl->ymin)*(p[1] - tl->ymin);
-	double b = (p[0] - tl->xmax)*(p[0] - tl->xmax) + (p[1] - tl->ymin)*(p[1] - tl->ymin);
-	double c = (p[0] - tl->xmin)*(p[0] - tl->xmin) + (p[1] - tl->ymax)*(p[1] - tl->ymax);
-	double d = (p[0] - tl->xmax)*(p[0] - tl->xmax) + (p[1] - tl->ymax)*(p[1] - tl->ymax);
-	nn.d = min(nn.d, max(max(max(a,b),c),d));
-      }
-    }
-      
-    if(!tr->empty()) {
-      if (p[0] < tr->xmin - nn.d || p[0] > tr->xmax + nn.d || p[1] < tr->ymin - nn.d || p[1] > tr->ymax + nn.d) {
-	//skip this
-      } else {
-	double a = (p[0] - tr->xmin)*(p[0] - tr->xmin) + (p[1] - tr->ymin)*(p[1] - tr->ymin);
-	double b = (p[0] - tr->xmax)*(p[0] - tr->xmax) + (p[1] - tr->ymin)*(p[1] - tr->ymin);
-	double c = (p[0] - tr->xmin)*(p[0] - tr->xmin) + (p[1] - tr->ymax)*(p[1] - tr->ymax);
-	double d = (p[0] - tr->xmax)*(p[0] - tr->xmax) + (p[1] - tr->ymax)*(p[1] - tr->ymax);
-	nn.d = min(nn.d, max(max(max(a,b),c),d));
-      }
-    }
-    */
 
     if(!bl->empty()) {
       nn = bl->nearestNeighbor(p, nn);
@@ -305,10 +320,17 @@ public:
     this->MAX_BUCKET_SIZE = max_bucket_size;
   }
 
+  /*
+    @returns returns the number of points in the subtree represented by this node
+  */
   int bucketsize() {
     return data.size();
   }
 
+  
+  /*
+    returns the bound of the quad represented by this node.
+  */  
   vector<T> getBounds() {
     vector<T> v;
     T a = {this->xmin,this->ymin};
@@ -327,9 +349,15 @@ public:
     return v;
   }
 
+
+  /*
+    The method returns the nearest neighbor and distance to the parameter point.
+    @params p : point whose nearest neighbor is to be searched
+    @params nn : point currently the nearest neighbor
+  */
   PtInfo<T> nearestNeighbor(T p, PtInfo<T> nn) {
     if(this->data.size() == 0) {
-      throw no_point_in_quad_exception;
+      throw no_point_in_quad_exception();
     }
     for(auto e: data) {
       double d = dist(p,e);
@@ -341,6 +369,13 @@ public:
     return nn;
   }
 
+  
+
+  /*
+    This method returns the nearest neighbor to a point only if the
+    query point is in the quad represented by this node.
+    @params p : query point
+  */
   PtInfo<T> findNearestPointInQuad(T p) {
     T n = this->nearestNeighbor(p);
     PtInfo<T> nn;
@@ -349,9 +384,13 @@ public:
     return nn;
   }
 
+  /*
+    The method returns the nearest neighbor to the parameter point.
+    @params p : point whose nearest neighbor is to be searched
+  */
   T nearestNeighbor(T p) {
     if(this->data.size() == 0) {
-      throw no_point_in_quad_exception;
+      throw no_point_in_quad_exception();
     }
     T n = this->data[0];
     double b = dist(p,n);
@@ -365,10 +404,19 @@ public:
     return n;
   }
 
+  /*
+    The method returns all the points in the subtree of this node as a vector
+  */
   vector<T> bfs() {
-    //cout << this->MAX_BUCKET_SIZE <<",datanode,datasize:" << data.size() << "\n";
     return data;
   }
+
+
+  /*
+    The method inserts a data point into the sub tree representee
+    by this node
+    @params data : point to be inserted
+  */
 
   QuadNode<T>* insert(T p) {
     data.push_back(p);
@@ -381,7 +429,13 @@ public:
     return this;
   }
 
-  
+  /*
+    This method splits the node in a direction decided by the level/depth
+    of this node in tree. It returns a group node with children containing 
+    the points previously contained in this node
+    @returns : new group node with children containing 
+               the points previously contained in this node
+   */
   QuadNode<T>* splitNode() {
 
     BoundaryNode<T>* s = new BoundaryNode<T>(this->xmin, this->xmax, this->ymin, this->ymax);
@@ -419,6 +473,11 @@ public:
 
 
 // T will be Point2D<double>.
+
+/*
+The class represents a Quad Tree. Only the leaf nodes store
+points while group nodes store the dividing plane.
+ */
 template <typename T>
 class QuadTree {
 private:
@@ -429,15 +488,29 @@ public:
   QuadTree(double xmin, double xmax, double ymin, double ymax, int max_bucket_size) {
     this->root = new DataNode<T>(xmin,xmax,ymin,ymax,max_bucket_size);
   }
-  
+
+  /*
+    returns the root of this tree
+   */
   QuadNode<T>* getRoot() {
     return root;
   }
 
+  /*
+    The method inserts one point into the tree by calling 
+    insert method of root node
+  */
   void insert(T data) {
     this->root = this->root->insert(data);
   }
 
+  /*
+    This method creates a tree by inserting the points sequentially into
+    the root of this tree;
+    @params begin : iterator to begining location of points to be inserted
+    @params end : iterator to end location of points to be inserted
+  */
+  
   template <typename Iterator>
   void createTree(Iterator begin, Iterator end) {
     auto it = begin;
@@ -447,128 +520,29 @@ public:
     }
   }
 
+  /*
+    The method returns all the points in the tree as a vector
+  */
   vector<T> bfs() {
     return this->root->bfs();
   }
 
+  /*
+    The method returns the nearest neighbor to the parameter point.
+    @params p : point whose nearest neighbor is to be searched
+  */
   T nearestNeighbor(T p) {
     return this->root->nearestNeighbor(p);
   }
 
+  /*
+    returns the bound of this tree.
+   */
   vector<T> getBounds() {
     return this->root->getBounds();
   }
 };
   
-  /*
-
-  // instead of double, we should have a generic type, same as that of T::double/int/float
-  QuadNode(double xmin, double xmax, double ymin,  double ymax, int bucket_size, int tile_size) {
-    this->xmin = xmin;
-    this->xmax = xmax;
-    this->ymin = ymin;
-    this->ymax = ymax;
-    this->bucket_size = bucket_size;
-    this->tile_size = tile_size;
-  }
-  
-    
-  void setBotLeft(QuadNode<T> *bl)
-  {
-    this->botleft = bl;
-  }
-  
-  QuadNode<T> *getBotLeft()
-  {
-    return this->botleft;
-  }
-  
-  void setBotRight(QuadNode<T> *br)
-  {
-    this->botright = br;
-  }
-  
-  QuadNode<T> *getBotRight()
-  {
-    return this->botright;
-  }
-  
-  void setTopLeft(QuadNode<T> *tl)
-  {
-    this->topleft = tl;
-  }
-  
-  QuadNode<T> *getTopLeft()
-  {
-    return this->topleft;
-  }
-  
-  void setTopRight(QuadNode<T> *tr)
-  {
-    this->topright = tr;
-  }
-  
-  QuadNode<T> *getTopRight()
-  {
-    return this->topright;
-  }
-  
-  
-  void SetData(T d)
-  {
-    this->data = d;
-  }
-
-  void SetHeight(int h) {
-    this->height = h;
-  }
-
-  T GetData()
-  {
-    return this->data;
-  }
-
-  
-  bool hasBotLeft()
-  {
-    if(botleft == NULL)
-      return false;
-    else
-      return true;
-  }
-
-  bool hasBotRight()
-  {
-    if(botright == NULL)
-      return false;
-    else
-      return true;
-  }
-
-  bool hasTopLeft()
-  {
-    if(topleft == NULL)
-      return false;
-    else
-      return true;
-  }
-
-  bool hasTopRight()
-  {
-    if(topright == NULL)
-      return false;
-    else
-      return true;
-  }
-  
-  int & GetHeight()
-  {
-    return this->height;
-  }
-  
-  
-}
-  */
 
 #endif
 
